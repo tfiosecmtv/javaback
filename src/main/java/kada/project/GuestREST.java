@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api")
 public class GuestREST {
 
     @Autowired
@@ -21,9 +21,9 @@ public class GuestREST {
     }
 
     //get guests by email
-    @GetMapping("/guests/{username}")
-    public ResponseEntity<Guest> getGuestByEmail(@PathVariable(value = "username") Long username) {
-        Guest guest = userRepo.findById( username ).orElseThrow();
+    @GetMapping("/guests/{userId}")
+    public ResponseEntity<Guest> getGuestByEmail(@PathVariable(value = "userId") Long userId) {
+        Guest guest = userRepo.findById( userId ).orElseThrow();
         return ResponseEntity.ok().body(guest);
 
     }
@@ -35,24 +35,31 @@ public class GuestREST {
     }
     //update
 
-    @PutMapping("/guests/{username}")
-    public ResponseEntity<Guest> updateguest(@PathVariable(value = "username") Long username,
+    @PutMapping("/guests/{userId}")
+    public ResponseEntity<Guest> updateguest(@PathVariable(value = "userId") Long userId,
                                                    @Validated @RequestBody Guest guestDets)  {
-        Guest guest = userRepo.findById(username)
+        Guest guest = userRepo.findById(userId)
                 .orElseThrow();
         guest.setLastName(guestDets.getLastName());
         guest.setFirstName(guestDets.getFirstName());
-        guest.setUsername(guestDets.getUsername());
+        guest.setUserId(guestDets.getUserId());
+        guest.setDocumentId(guestDets.getDocumentId());
+        guest.setDocumentType(guestDets.getDocumentType());
+        guest.setHome(guestDets.getHome());
+        guest.setMobile(guestDets.getMobile());
+        guest.setAddress(guestDets.getAddress());
+        guest.setEmail(guestDets.getEmail());
+        guest.setPassword(guestDets.getPassword());
         final Guest updatedGuest = userRepo.save(guest);
         return ResponseEntity.ok(updatedGuest);
     }
 
     //delete
 
-    @DeleteMapping("/guests/{username}")
-    public Map<String, Boolean> deleteGuest(@PathVariable(value = "username") Long username)
+    @DeleteMapping("/guests/{userId}")
+    public Map<String, Boolean> deleteGuest(@PathVariable(value = "userId") Long userId)
              {
-        Guest guest = userRepo.findById(username)
+        Guest guest = userRepo.findById(userId)
                 .orElseThrow();
 
         userRepo.delete(guest);
