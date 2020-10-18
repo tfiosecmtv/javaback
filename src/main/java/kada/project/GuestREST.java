@@ -28,6 +28,14 @@ public class GuestREST {
         return ResponseEntity.ok().body(guest);
     }
 
+    //get guests by id
+    @GetMapping("/guests/{userId}")
+    public ResponseEntity<Guest> getGuestByEmail(@PathVariable(value = "userId") Long userId) {
+        Guest guest = userRepo.findById( userId ).orElseThrow();
+        return ResponseEntity.ok().body(guest);
+
+    }
+
     //signup
     @PostMapping("/guests")
     public Guest signup(@Validated @RequestBody Guest guest) {
