@@ -22,11 +22,10 @@ public class GuestREST {
     }
 
     //get guests by email
-    @GetMapping("/guests/{userId}")
-    public ResponseEntity<Guest> getGuestByEmail(@PathVariable(value = "userId") Long userId) {
-        Guest guest = userRepo.findById( userId ).orElseThrow();
+    @GetMapping("/guests/{email}")
+    public ResponseEntity<Guest> getGuestByEmail(@PathVariable(value = "email") String email) {
+        Guest guest = userRepo.findByEmail( email );
         return ResponseEntity.ok().body(guest);
-
     }
 
     //signup
