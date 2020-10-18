@@ -5,7 +5,6 @@ import javax.persistence.*;
 @Entity
 @Table(name = "guests")
 public class Guest {
-
     private Long userId;
     private String firstName;
     private String lastName;

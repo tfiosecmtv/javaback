@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.mail.Session;
 import java.util.*;
 
 @RestController
@@ -68,4 +69,9 @@ public class GuestREST {
         return response;
     }
 
+
+
+
 }
+
+

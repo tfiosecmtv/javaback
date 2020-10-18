@@ -37,11 +37,12 @@ public class BookingHistoryREST {
     @PutMapping("/bookinghistory/{booking_id}")
     public ResponseEntity<BookingHistory> updatebooking(@PathVariable(value = "booking_id") Long booking_id,
                                              @Validated @RequestBody BookingHistory bookingDets)  {
+        System.out.println(booking_id.toString());
         BookingHistory bookingHistory = bookingHistoryRepo.findById(booking_id)
-                .orElseThrow();
+                .orElseThrow( );
 
         bookingHistory.setAppointment_status( bookingDets.getAppointment_status() );
-        bookingHistory.setBooking_id( bookingDets.getBooking_id() );
+        bookingHistory.setRoom_type( bookingDets.getRoom_type() );
         bookingHistory.setDate_reservation( bookingDets.getDate_reservation() );
         bookingHistory.setDue_date( bookingDets.getDue_date() );
         bookingHistory.setNumber_of_rooms( bookingDets.getNumber_of_rooms() );
