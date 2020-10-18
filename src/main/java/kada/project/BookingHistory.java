@@ -12,10 +12,11 @@ public class BookingHistory {
     private String number_of_rooms;
     private String payment_status;
     private String appointment_status;
+    private String email;
 
 
 
-    public BookingHistory(String room_type, String date_reservation, String due_date, String number_of_rooms, String payment_status, String appointment_status, Long booking_id) {
+    public BookingHistory(String email,String room_type, String date_reservation, String due_date, String number_of_rooms, String payment_status, String appointment_status, Long booking_id) {
         this.room_type = room_type;
         this.date_reservation = date_reservation;
         this.due_date = due_date;
@@ -23,6 +24,7 @@ public class BookingHistory {
         this.payment_status = payment_status;
         this.appointment_status = appointment_status;
         this.booking_id = booking_id;
+        this.email = email;
     }
 
     public BookingHistory() {
@@ -86,9 +88,16 @@ public class BookingHistory {
         this.appointment_status = appointment_status;
     }
 
+    @Column(name = "email")
+    public String getEmail() {
+        return email;
+    }
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
     @Override
     public String toString() {
-        return "BookingHistory [room_type=" + room_type + ", date_reservation=" + date_reservation + ", due_date=" + due_date + ", number_of_rooms=" + number_of_rooms + ", payment_status=" + payment_status + ", appointment_status=" + appointment_status + ", booking_id=" + booking_id + "]";
+        return "BookingHistory [room_type=" + room_type + ", date_reservation=" + date_reservation + ", due_date=" + due_date + ", number_of_rooms=" + number_of_rooms + ", payment_status=" + payment_status + ", appointment_status=" + appointment_status + ", booking_id=" + booking_id + ", email=" + email+ "]";
     }
 }
