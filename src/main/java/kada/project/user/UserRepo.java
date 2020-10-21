@@ -1,4 +1,4 @@
-package kada.project;
+package kada.project.user;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

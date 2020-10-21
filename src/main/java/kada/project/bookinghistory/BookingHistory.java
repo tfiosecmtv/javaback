@@ -1,4 +1,4 @@
-package kada.project;
+package kada.project.bookinghistory;
 import javax.persistence.*;
 //import java.time.LocalDate;
 

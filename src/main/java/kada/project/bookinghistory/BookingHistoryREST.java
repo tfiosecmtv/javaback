@@ -1,5 +1,7 @@
-package kada.project;
+package kada.project.bookinghistory;
 
+import kada.project.bookinghistory.BookingHistory;
+import kada.project.bookinghistory.BookingHistoryRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;

@@ -1,4 +1,4 @@
-package kada.project;
+package kada.project.user;
 
 import javax.persistence.*;
 
@@ -15,6 +15,8 @@ public class Guest {
     private String documentType;
     private String documentId;
     private String address;
+    private String token;
+    private String role = "GUEST";
 
 
     public Guest(Long userId, String firstName, String lastName, String email, String password, String home, String mobile, String documentType, String documentId, String address) {
@@ -112,14 +114,24 @@ public class Guest {
     public String getPassword() {
         return password;
     }
-
     public void setPassword(String password) {
         this.password = password;
     }
 
-    @Override
-    public String toString() {
-        return "Guest [userId=" + userId + ", firstName=" + firstName + ", lastName=" + lastName + ", home=" + home + ", mobile=" + mobile + ", documentId=" + documentId + ", documentType=" + documentType + ", address=" + address +", email=" + email + ", password=" + password + "]";
+    @Column(name = "token")
+    public String getToken() {
+        return token;
+    }
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    @Column(name = "role")
+    public String getRole() {
+        return role;
+    }
+    public void setRole(String role) {
+        this.role = role;
     }
 
 }

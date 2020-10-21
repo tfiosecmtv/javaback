@@ -1,5 +1,6 @@
-package kada.project;
+package kada.project.bookinghistory;
 
+import kada.project.bookinghistory.BookingHistory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.*;

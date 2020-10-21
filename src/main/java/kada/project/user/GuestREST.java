@@ -1,11 +1,16 @@
-package kada.project;
+package kada.project.user;
 
+import com.sun.mail.iap.Response;
+import kada.project.UserSession.UserService;
+import kada.project.UserSession.JwtProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.mail.Session;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 @RestController
@@ -15,21 +20,52 @@ public class GuestREST {
     @Autowired
     private UserRepo userRepo;
 
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private JwtProvider jwtProvider;
+
     //get guests
     @GetMapping("/guests")
     public List<Guest> getAllGuests() {
         return this.userRepo.findAll();
     }
 
-    //get guests by email
-    @GetMapping("/guests/{email}")
-    public ResponseEntity<Guest> getGuestByEmail(@PathVariable(value = "email") String email) {
-        Guest guest = userRepo.findByEmail( email );
+//    //get guests by email
+//    @GetMapping("/guests/{email}")
+//    public ResponseEntity<Guest> getGuestByEmail(@PathVariable(value = "email") String email) {
+//        Guest guest = userRepo.findByEmail( email );
+//        return ResponseEntity.ok().body(guest);
+//    }
+
+//    @GetMapping("/guests/login/{email}")
+//    public ResponseEntity<Guest> getGuestByEmail(@PathVariable(value = "email") String email) {
+//        Guest guest = userRepo.findByEmail( email );
+//        return ResponseEntity.ok().body(guest);
+//    }
+
+    @PostMapping("/login")
+    public ResponseEntity<Guest> getGuestByEmail(@Validated @RequestBody Guest user) {
+        Guest guest = userService.findByLoginAndPassword(user.getEmail(), user.getPassword());
+        String token = jwtProvider.generateToken(guest.getEmail());
+        guest.setToken( token );
+        guest.setRole( "GUEST" );
+        userRepo.save( guest );
         return ResponseEntity.ok().body(guest);
     }
 
+    @PostMapping("/guests/logout/{token}")
+    public ResponseEntity LogOut(@PathVariable(value = "token") String token) {
+        String email = jwtProvider.getLoginFromToken( token );
+        Guest guest = userRepo.findByEmail( email );
+        guest.setRole( "" );
+        guest.setToken( "" );
+        userRepo.save( guest );
+        return new ResponseEntity("logged out", HttpStatus.OK );
+    }
+
     //signup
-    @PostMapping("/guests")
+    @PostMapping("/signup")
     public Guest signup(@Validated @RequestBody Guest guest) {
         return userRepo.save(guest);
     }
