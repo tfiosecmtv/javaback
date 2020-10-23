@@ -1,3 +1,4 @@
+
 package kada.project.bookinghistory;
 import javax.persistence.*;
 //import java.time.LocalDate;
@@ -13,8 +14,6 @@ public class BookingHistory {
     private String payment_status;
     private String appointment_status;
     private String email;
-
-
 
     public BookingHistory(String email,String room_type, String date_reservation, String due_date, String number_of_rooms, String payment_status, String appointment_status, Long booking_id) {
         this.room_type = room_type;

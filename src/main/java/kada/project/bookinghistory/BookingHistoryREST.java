@@ -1,7 +1,5 @@
 package kada.project.bookinghistory;
 
-import kada.project.bookinghistory.BookingHistory;
-import kada.project.bookinghistory.BookingHistoryRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -43,7 +41,7 @@ public class BookingHistoryREST {
 
     @PutMapping("/bookinghistory/{booking_id}")
     public ResponseEntity<BookingHistory> updatebooking(@PathVariable(value = "booking_id") Long booking_id,
-                                             @Validated @RequestBody BookingHistory bookingDets)  {
+                                                        @Validated @RequestBody BookingHistory bookingDets)  {
         System.out.println(booking_id.toString());
         BookingHistory bookingHistory = bookingHistoryRepo.findById(booking_id)
                 .orElseThrow( );
