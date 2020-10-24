@@ -21,14 +21,10 @@ public class BookingHistoryREST {
     }
 
     //get guests by email
-    @GetMapping("/bookinghistory/{email}")
-//    public ResponseEntity<List<BookingHistory>> getBookingHistoryByBookingId(@PathVariable(value = "email") String email) {
-//        List<BookingHistory> bh = bookingHistoryRepo.findByEmail( email );
-//        return new ResponseEntity.ok(bh);
-//    }
-    public @ResponseBody List<BookingHistory> find(@PathVariable(value = "email") String email) {
+    @GetMapping("/bookinghistory/{guestid}")
+    public @ResponseBody List<BookingHistory> find(@PathVariable(value = "guestid") Long guestid) {
 
-        List<BookingHistory> objects = bookingHistoryRepo.findByEmail( email );
+        List<BookingHistory> objects = bookingHistoryRepo.findByGuestid( guestid );
         return objects;
     }
 
@@ -45,13 +41,14 @@ public class BookingHistoryREST {
         System.out.println(booking_id.toString());
         BookingHistory bookingHistory = bookingHistoryRepo.findById(booking_id)
                 .orElseThrow( );
-        bookingHistory.setAppointment_status( bookingDets.getAppointment_status() );
+        bookingHistory.setStatus( bookingDets.getStatus() );
         bookingHistory.setRoom_type( bookingDets.getRoom_type() );
         bookingHistory.setDate_reservation( bookingDets.getDate_reservation() );
         bookingHistory.setDue_date( bookingDets.getDue_date() );
         bookingHistory.setNumber_of_rooms( bookingDets.getNumber_of_rooms() );
         bookingHistory.setPayment_status( bookingDets.getPayment_status() );
-        bookingHistory.setEmail( bookingDets.getEmail() );
+        bookingHistory.setGuestid( bookingDets.getGuestid() );
+        bookingHistory.setPrice( bookingDets.getPrice() );
         final BookingHistory updatedBooking = bookingHistoryRepo.save(bookingHistory);
         return ResponseEntity.ok(updatedBooking);
     }
