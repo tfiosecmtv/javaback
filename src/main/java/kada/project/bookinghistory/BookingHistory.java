@@ -7,23 +7,27 @@ import javax.persistence.*;
 @Table(name = "bookinghistory")
 public class BookingHistory {
     private Long booking_id;
+    private Long guestid;
+    private Long hotel_id;
     private String room_type;
     private String date_reservation;
     private String due_date;
     private String number_of_rooms;
     private String payment_status;
-    private String appointment_status;
-    private String email;
+    private String status;
+    private Integer price;
 
-    public BookingHistory(String email,String room_type, String date_reservation, String due_date, String number_of_rooms, String payment_status, String appointment_status, Long booking_id) {
+    public BookingHistory(Long hotel_id, Long guestid, Integer price, String room_type, String date_reservation, String due_date, String number_of_rooms, String payment_status, String appointment_status, Long booking_id) {
         this.room_type = room_type;
         this.date_reservation = date_reservation;
         this.due_date = due_date;
         this.number_of_rooms = number_of_rooms;
         this.payment_status = payment_status;
-        this.appointment_status = appointment_status;
+        this.status = appointment_status;
         this.booking_id = booking_id;
-        this.email = email;
+        this.price = price;
+        this.guestid = guestid;
+        this.hotel_id = hotel_id;
     }
 
     public BookingHistory() {
@@ -79,24 +83,34 @@ public class BookingHistory {
         this.payment_status = payment_status;
     }
 
-    @Column(name = "appointment_status")
-    public String getAppointment_status() {
-        return appointment_status;
+    @Column(name = "status")
+    public String getStatus() {
+        return status;
     }
-    public void setAppointment_status(String appointment_status) {
-        this.appointment_status = appointment_status;
-    }
-
-    @Column(name = "email")
-    public String getEmail() {
-        return email;
-    }
-    public void setEmail(String email) {
-        this.email = email;
+    public void setStatus(String appointment_status) {
+        this.status = appointment_status;
     }
 
-    @Override
-    public String toString() {
-        return "BookingHistory [room_type=" + room_type + ", date_reservation=" + date_reservation + ", due_date=" + due_date + ", number_of_rooms=" + number_of_rooms + ", payment_status=" + payment_status + ", appointment_status=" + appointment_status + ", booking_id=" + booking_id + ", email=" + email+ "]";
+    @Column(name = "price")
+    public Integer getPrice() {
+        return price;
+    }
+    public void setPrice(Integer price) {
+        this.price = price;
+    }
+
+    @Column(name = "hotel_id")
+    public Long getHotel_id() {
+        return hotel_id;
+    }
+    public void setHotel_id(Long hotel_id) {
+        this.hotel_id = hotel_id;
+    }
+    @Column(name = "guest_id")
+    public Long getGuestid() {
+        return guestid;
+    }
+    public void setGuestid(Long guest_id) {
+        this.guestid = guest_id;
     }
 }
