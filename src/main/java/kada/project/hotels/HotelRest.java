@@ -1,5 +1,6 @@
 package kada.project.hotels;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sun.mail.iap.Response;
 import kada.project.bookinghistory.BookingHistory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,16 +35,16 @@ public class HotelRest {
         return hotelEntityRepo.save(hotelEntity);
     }
 
-//    @GetMapping("/hotels/{hotelid}")
-//    public ResponseEntity getHotelInfo(@PathVariable(value = "hotelid") Long hotelid) {
-//        HotelEntity hotelEntity = hotelEntityRepo.findById( hotelid ).orElseThrow();
-//        List<HotelFeatures> hotelFeatures = hotelFeaturesRepo.findByHotelid( hotelid );
-//        List<HotelPhone>  hotelPhones = hotelPhoneRepo.findByHotelid( hotelid );
-//        List<HotelSeasons> hotelSeasons = hotelSeasonsRepo.findByHotelid( hotelid );
-//        List<HotelServices> hotelServices = hotelServicesRepo.findByHotelid( hotelid );
-//        Hotel hotel = new Hotel(hotelEntity, hotelFeatures, hotelPhones, hotelSeasons, hotelServices);
-//        return  ResponseEntity.ok(hotel);
-//    } not working
+    @GetMapping("/hotels/{hotelid}")
+    public ResponseEntity getHotelInfo(@PathVariable(value = "hotelid") Long hotelid) throws JsonProcessingException {
+        HotelEntity hotelEntity = hotelEntityRepo.findById( hotelid ).orElseThrow();
+        List<HotelFeatures> hotelFeatures = hotelFeaturesRepo.findByHotelid( hotelid );
+        List<HotelPhone>  hotelPhones = hotelPhoneRepo.findByHotelid( hotelid );
+        List<HotelSeasons> hotelSeasons = hotelSeasonsRepo.findByHotelid( hotelid );
+        List<HotelServices> hotelServices = hotelServicesRepo.findByHotelid( hotelid );
+        Hotel hotel = new Hotel(hotelEntity, hotelFeatures, hotelPhones, hotelSeasons, hotelServices);
+        return new ResponseEntity(hotel.getJson(), HttpStatus.OK);
+    }
     @GetMapping("/hotels/service/{hotelid}")
     public @ResponseBody List<HotelServices> getservice(@PathVariable(value = "hotelid") Long hotelid) {
         return hotelServicesRepo.findByHotelid( hotelid );
