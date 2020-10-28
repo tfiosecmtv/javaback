@@ -22,7 +22,3 @@ interface HotelSeasonsRepo extends JpaRepository<HotelSeasons, SeasonsId> {
     List<HotelSeasons> findByHotelid(Long hotel_id);
 }
 
-@Repository
-interface HotelServicesRepo extends JpaRepository<HotelServices, ServicesId> {
-    List<HotelServices> findByHotelid(Long hotel_id);
-}

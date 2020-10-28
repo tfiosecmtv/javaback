@@ -42,10 +42,10 @@ class PhoneId implements Serializable {
 class HotelPhone {
     @Id
     @Column(name = "hotel_id")
-    Long hotelid;
+    Long hotelid; //Hotelid
     @Id
     @Column(name = "phone_num")
-    String name;
+    String name; //Name
 
     public Long getHotelid() {
         return hotelid;

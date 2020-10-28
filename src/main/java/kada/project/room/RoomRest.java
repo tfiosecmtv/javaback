@@ -36,4 +36,10 @@ public class RoomRest {
         RoomTypeGeneral gen = new RoomTypeGeneral( list, roomType );
         return new ResponseEntity(gen.getJson(), HttpStatus.OK );
     }
+
+    @GetMapping("/roomtypes/{type}")
+    public List<RoomType> filterRoomType(@PathVariable(value = "type") String type) throws JsonProcessingException {
+        List<RoomType> roomType = roomTypeRepo.findByName( type );
+        return  roomType;
+    }
 }

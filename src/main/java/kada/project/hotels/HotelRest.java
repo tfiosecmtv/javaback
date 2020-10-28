@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api") //localhost:8181/api/
 public class HotelRest {
     @Autowired
     private  HotelEntityRepo hotelEntityRepo;
@@ -25,7 +25,7 @@ public class HotelRest {
     @Autowired
     private HotelServicesRepo hotelServicesRepo;
 
-    @GetMapping("/hotels")
+    @GetMapping("/hotels") // /api/hotels
     public List<HotelEntity> getAllHotels() {
         return this.hotelEntityRepo.findAll();
     }

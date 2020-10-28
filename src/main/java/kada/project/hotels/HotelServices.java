@@ -41,7 +41,7 @@ class ServicesId implements Serializable {
 @Entity
 @IdClass(ServicesId.class)
 @Table(name = "services")
-class HotelServices {
+public class HotelServices {
     @Id
     @Column(name = "hotel_id")
     Long hotelid;
