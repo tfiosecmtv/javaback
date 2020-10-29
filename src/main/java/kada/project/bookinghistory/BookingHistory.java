@@ -78,11 +78,11 @@ public class BookingHistory {
     @Column(name = "due_date")
     Date due_date;
     @Column(name = "number_of_rooms")
-    String number_of_rooms;
+    Integer number_of_rooms;
     @Column(name = "price")
     Integer price;
 
-    public BookingHistory(Long hotelid, Long guestid, Long bookingid, String roomtype, String status, Date date_reservation, Date due_date, String number_of_rooms, Integer price) {
+    public BookingHistory(Long hotelid, Long guestid, Long bookingid, String roomtype, String status, Date date_reservation, Date due_date, Integer number_of_rooms, Integer price) {
         this.hotelid = hotelid;
         this.guestid = guestid;
         this.bookingid = bookingid;
@@ -154,11 +154,11 @@ public class BookingHistory {
         this.due_date = due_date;
     }
 
-    public String getNumber_of_rooms() {
+    public Integer getNumber_of_rooms() {
         return number_of_rooms;
     }
 
-    public void setNumber_of_rooms(String number_of_rooms) {
+    public void setNumber_of_rooms(Integer number_of_rooms) {
         this.number_of_rooms = number_of_rooms;
     }
 

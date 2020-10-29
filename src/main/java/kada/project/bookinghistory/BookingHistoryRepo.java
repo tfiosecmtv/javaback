@@ -13,5 +13,4 @@ interface BookingHistoryRepo extends JpaRepository<BookingHistory, Long> {
 
 interface GuestUsesServicesRepo extends JpaRepository<GuestUsesService, GuestUsesServiceId> {
     List<GuestUsesService> findByBookingid(Long booking_id);
-    GuestUsesService findByBookingidAndService(Long booking_id, String service);
 }

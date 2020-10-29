@@ -37,7 +37,7 @@ class SeasonsId implements Serializable {
 @Entity
 @IdClass(SeasonsId.class)
 @Table(name = "hotel_has_season")
-class HotelSeasons {
+public class HotelSeasons {
 
     @Id
     @Column(name = "hotel_id")

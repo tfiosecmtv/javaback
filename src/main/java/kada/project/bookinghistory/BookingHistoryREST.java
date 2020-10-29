@@ -1,14 +1,16 @@
 package kada.project.bookinghistory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import kada.project.hotels.HotelServices;
+import kada.project.hotels.*;
+import kada.project.room.RoomType;
+import kada.project.room.RoomTypeRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.w3c.dom.html.HTMLTableCaptionElement;
-import kada.project.hotels.HotelServicesRepo;
+
 import java.util.*;
 
 // 10 oct - 20 oct
@@ -26,7 +28,12 @@ public class BookingHistoryREST {
     private GuestUsesServicesRepo guestUsesServicesRepo;
     @Autowired
     private HotelServicesRepo hotelServicesRepo;
-
+    @Autowired
+    private RoomTypeRepo roomTypeRepo;
+    @Autowired
+    private HotelSeasonsRepo hotelSeasonsRepo;
+    @Autowired
+    private SeasonsRepo seasonsRepo;
     //get guests
     @GetMapping("/bookinghistory")
     public List<BookingHistory> getAllBookingHistory() {
@@ -51,22 +58,67 @@ public class BookingHistoryREST {
         return objects;
     }
 
-    @PostMapping("/booking/addservice/{bookingid}/{service}")
-    public ResponseEntity addService(@PathVariable(value = "bookingid") Long bookingid, @PathVariable(value = "service") String service) {
-        BookingHistory bookingHistory = bookingHistoryRepo.findByBookingid(bookingid);
-        HotelServices hotelServices = hotelServicesRepo.findByHotelidAndService( bookingHistory.hotelid, service );
-        bookingHistory.setPrice( bookingHistory.getPrice() + hotelServices.getPrice() );
+    @PostMapping("/booking/addservice")
+    public ResponseEntity addService(@Validated @RequestBody GuestUsesService guestUsesService) {
+        System.out.println(guestUsesService.getHotel_id()); //
+        System.out.println(guestUsesService.getGuest_id());
+        System.out.println(guestUsesService.getBooking_id());
+        System.out.println(guestUsesService.getRoom_type()); //
+        System.out.println(guestUsesService.getService());
+        System.out.println(guestUsesService.getHow_many_timestimes()); //
+        BookingHistory bookingHistory = bookingHistoryRepo.findByBookingid(guestUsesService.getBooking_id());
+        HotelServices hotelServices = hotelServicesRepo.findByHotelidAndService( bookingHistory.hotelid, guestUsesService.getService() );
+        bookingHistory.setPrice( bookingHistory.getPrice() + hotelServices.getPrice()*guestUsesService.getHow_many_timestimes() );
         bookingHistoryRepo.save( bookingHistory );
-        GuestUsesService guestUsesService = guestUsesServicesRepo.findByBookingidAndService( bookingid, service );
-        guestUsesService.setHowmanytimes( guestUsesService.getHowmanytimes() + 1 );
+        guestUsesService.setHow_many_times( guestUsesService.getHow_many_timestimes()+1 );
         guestUsesServicesRepo.save( guestUsesService );
 
         return new ResponseEntity("success!!!", HttpStatus.OK);
     }
 
-    //signup
+
     @PostMapping("/bookinghistory")
     public BookingHistory signup(@Validated @RequestBody BookingHistory bookingHistory) {
+        Date start = bookingHistory.getDate_reservation();
+        Date end = bookingHistory.getDue_date();
+        Calendar cStart = Calendar.getInstance();
+        cStart.setTime( start );
+        cStart.add( Calendar.DAY_OF_MONTH,-1 );
+        Calendar cEnd = Calendar.getInstance();
+        cEnd.setTime( end );
+        RoomType roomType = roomTypeRepo.findByHotelidAndName( bookingHistory.getHotelid(), bookingHistory.getRoomtype() );
+        while(cStart.before( cEnd )) {
+            if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY)
+                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_mon() );
+            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.TUESDAY)
+                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_tue() );
+            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.WEDNESDAY)
+                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_wed() );
+            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.THURSDAY)
+                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_thu() );
+            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY)
+                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_fri() );
+            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
+                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_sat() );
+            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
+                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_sun() );
+            cStart.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        cStart.setTime( start );
+        cStart.add( Calendar.DAY_OF_MONTH,-1 );
+        List<HotelSeasons> hotelSeasons = hotelSeasonsRepo.findByHotelid( bookingHistory.getHotelid() );
+        while (cStart.before( cEnd )) {
+            for(HotelSeasons hotelseason : hotelSeasons ) {
+                Seasons season = seasonsRepo.findSeasonsByName( hotelseason.getSeason() );
+                if(cStart.getTime().getTime() >= season.getStart_date().getTime() &&
+                        cStart.getTime().getTime() <= season.getEnd_date().getTime()) {
+                    bookingHistory.setPrice( bookingHistory.getPrice()+hotelseason.getAdd_price() );
+                    break;
+                }
+            }
+            cStart.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        bookingHistory.setPrice( bookingHistory.getPrice()*bookingHistory.getNumber_of_rooms());
         return bookingHistoryRepo.save(bookingHistory);
     }
     //update

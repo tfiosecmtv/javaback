@@ -4,12 +4,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@Repository
-interface RoomTypeRepo extends JpaRepository<RoomType, RoomTypeId> {
-    List<RoomType> findByHotelid(Long hotel_id);
-    List<RoomType> findByName(String name);
-    RoomType findByHotelidAndName(Long hotel_id, String name);
-}
 
 @Repository
 interface RoomTypeFeaturesRepo extends JpaRepository<RoomTypeFeatures, RoomTypeFeaturesId> {

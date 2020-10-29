@@ -4,7 +4,7 @@ import java.util.*;
 @Entity
 @Table(name = "season")
 public class Seasons {
-    String name;
+
     Date start_date;
     Date end_date;
 
@@ -18,6 +18,7 @@ public class Seasons {
 
     @Id
     @Column(name = "name")
+    String name;
     public String getName() {
         return name;
     }
