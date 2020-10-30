@@ -2,6 +2,7 @@ package kada.project.room;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import kada.project.hotels.HotelEntity;
+import kada.project.hotels.OccupationHistoryRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class RoomRest {
     @Autowired
     private  RoomTypeFeaturesRepo roomTypeFeaturesRepo;
     @Autowired
-    private  OccupationHistoryRepo occupationHistoryRepo;
+    private OccupationHistoryRepo occupationHistoryRepo;
 
     @GetMapping("/roomtypes")
     public List<RoomType> getAllRoomTypes() {

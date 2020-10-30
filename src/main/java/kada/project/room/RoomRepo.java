@@ -13,16 +13,10 @@ interface RoomTypeFeaturesRepo extends JpaRepository<RoomTypeFeatures, RoomTypeF
 }
 
 @Repository
-interface RoomRepo extends JpaRepository<Room, RoomId> {
+public interface RoomRepo extends JpaRepository<Room, RoomId> {
     List<Room> findByHotelid(Long hotel_id);
     List<Room> findByRoomtype(String room_type);
     List<Room> findByRoomnumber(Integer room_number);
+    Room findByHotelidAndRoomnumber(Long hotel_id, Integer room_number);
 }
 
-@Repository
-interface OccupationHistoryRepo extends JpaRepository<OccupationHistory, OccupationHistoryId> {
-    List<OccupationHistory> findByHotelid(Long hotel_id);
-    List<OccupationHistory> findByRoomtype(String room_type);
-    List<OccupationHistory> findByRoomnumber(Integer room_number);
-    List<OccupationHistory> findByGuestid(Long guest_id);
-}

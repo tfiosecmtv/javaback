@@ -8,6 +8,7 @@ import java.util.List;
 
 @Repository
 interface HotelEntityRepo extends JpaRepository<HotelEntity, Long> {
+    List<HotelEntity> findByCity(String city);
 }
 @Repository
 interface HotelFeaturesRepo extends JpaRepository<HotelFeatures, FeaturesId> {

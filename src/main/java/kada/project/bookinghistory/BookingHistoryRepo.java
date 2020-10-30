@@ -4,11 +4,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.*;
 @Repository
-interface BookingHistoryRepo extends JpaRepository<BookingHistory, Long> {
+public interface BookingHistoryRepo extends JpaRepository<BookingHistory, Long> {
     List<BookingHistory> findByGuestid(Long guest_id);
     List<BookingHistory> findByHotelid(Long hotel_id);
     List<BookingHistory> findByRoomtype(Long room_type);
     BookingHistory findByBookingid(Long booking_id);
+    List<BookingHistory> findByHotelidAndRoomtype(Long hotel_id, String room_type);
 }
 
 interface GuestUsesServicesRepo extends JpaRepository<GuestUsesService, GuestUsesServiceId> {

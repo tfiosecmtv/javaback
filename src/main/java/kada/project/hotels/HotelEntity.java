@@ -5,14 +5,14 @@ import javax.persistence.*;
 @Entity
 @Table(name = "hotel")
 public class HotelEntity {
-    Long hotel_id;
+    Long hotelid;
     String name;
     String address;
     String city;
     String country;
 
     public HotelEntity(Long hotel_id, String name, String address, String city, String country) {
-        this.hotel_id = hotel_id;
+        this.hotelid = hotel_id;
         this.name = name;
         this.address = address;
         this.city = city;
@@ -25,10 +25,10 @@ public class HotelEntity {
     @Id
     @Column(name = "hotel_id")
     public Long getHotel_id() {
-        return hotel_id;
+        return hotelid;
     }
     public void setHotel_id(Long hotel_id) {
-        this.hotel_id = hotel_id;
+        this.hotelid = hotel_id;
     }
 
     @Column(name = "name")
