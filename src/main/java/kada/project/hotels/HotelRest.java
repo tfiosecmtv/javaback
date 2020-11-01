@@ -52,7 +52,7 @@ public class HotelRest {
         return hotelEntityRepo.save(hotelEntity);
     }
 
-    @GetMapping("/hotels/filter")
+    @PostMapping("/hotels/filter")
     public ResponseEntity getHotelInfoByCity(@RequestBody HotelFilter hotelFilter)  throws JsonProcessingException{
         List<HotelEntity> hotelEntityList = hotelEntityRepo.findByCity( hotelFilter.getCity() );
         List<Room> availableRoomList = new ArrayList<Room>();
