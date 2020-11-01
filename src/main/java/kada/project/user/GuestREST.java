@@ -54,6 +54,12 @@ public class GuestREST {
         return ResponseEntity.ok().body(guest);
     }
 
+    @GetMapping("/guests/{token}")
+    public Guest getGuest(@PathVariable(value = "token") String token) {
+        return this.userRepo.findByEmail(jwtProvider.getLoginFromToken( token ));
+    }
+
+
     @PostMapping("/guests/logout/{token}")
     public ResponseEntity LogOut(@PathVariable(value = "token") String token) {
         String email = jwtProvider.getLoginFromToken( token );
