@@ -14,10 +14,13 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.HashMap;
 
 @Component
 @Log
 public class JwtProvider {
+
+    static public HashMap<String, String> hashmap = new HashMap<>();
 
     @Value("$(jwt.secret)")
     private String jwtSecret;

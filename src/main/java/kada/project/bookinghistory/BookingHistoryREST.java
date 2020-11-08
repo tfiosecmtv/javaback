@@ -2,8 +2,7 @@ package kada.project.bookinghistory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import kada.project.hotels.*;
-import kada.project.room.RoomType;
-import kada.project.room.RoomTypeRepo;
+import kada.project.room.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +21,9 @@ import java.util.*;
 @RequestMapping("/api")
 public class BookingHistoryREST {
 
+    public BookingHistoryREST(){
+    }
+
     @Autowired
     private BookingHistoryRepo bookingHistoryRepo;
     @Autowired
@@ -31,9 +33,13 @@ public class BookingHistoryREST {
     @Autowired
     private RoomTypeRepo roomTypeRepo;
     @Autowired
+    private RoomRepo roomRepo;
+    @Autowired
     private HotelSeasonsRepo hotelSeasonsRepo;
     @Autowired
     private SeasonsRepo seasonsRepo;
+    @Autowired
+    private OccupationHistoryRepo occupationHistoryRepo;
     //get guests
     @GetMapping("/bookinghistory")
     public List<BookingHistory> getAllBookingHistory() {
@@ -68,6 +74,7 @@ public class BookingHistoryREST {
         System.out.println(guestUsesService.getHow_many_timestimes()); //
         BookingHistory bookingHistory = bookingHistoryRepo.findByBookingid(guestUsesService.getBooking_id());
         HotelServices hotelServices = hotelServicesRepo.findByHotelidAndService( bookingHistory.hotelid, guestUsesService.getService() );
+        bookingHistory.setService_price( bookingHistory.getService_price() + hotelServices.getPrice()*guestUsesService.getHow_many_timestimes() );
         bookingHistory.setPrice( bookingHistory.getPrice() + hotelServices.getPrice()*guestUsesService.getHow_many_timestimes() );
         bookingHistoryRepo.save( bookingHistory );
         guestUsesService.setHow_many_times( guestUsesService.getHow_many_timestimes()+1 );
@@ -76,9 +83,15 @@ public class BookingHistoryREST {
         return new ResponseEntity("success!!!", HttpStatus.OK);
     }
 
+    @PostMapping("/bookinghistory/addoccupation")
+    public OccupationHistory addoh(@Validated @RequestBody OccupationHistory occupationHistory)  {
+        occupationHistoryRepo.save( occupationHistory );
+        return occupationHistory;
+    }
 
     @PostMapping("/bookinghistory")
     public BookingHistory signup(@Validated @RequestBody BookingHistory bookingHistory) {
+        System.out.println("in "+ bookingHistory.getGuestid());
         Date start = bookingHistory.getDate_reservation();
         Date end = bookingHistory.getDue_date();
         Calendar cStart = Calendar.getInstance();
@@ -143,15 +156,14 @@ public class BookingHistoryREST {
     //delete
 
     @DeleteMapping("/bookinghistory/{booking_id}")
-    public Map<String, Boolean> deleteBooking(@PathVariable(value = "booking_id") Long booking_id)
+    public String deleteBooking(@PathVariable(value = "booking_id") Long booking_id)
     {
         BookingHistory bookingHistory = bookingHistoryRepo.findById(booking_id)
                 .orElseThrow();
-
+        List<OccupationHistory> occupationHistoryList = occupationHistoryRepo.findByBookingid( booking_id );
         bookingHistoryRepo.delete(bookingHistory);
-        Map<String, Boolean> response = new HashMap<>();
-        response.put("deleted", Boolean.TRUE);
-        return response;
+        occupationHistoryRepo.deleteAll(occupationHistoryList);
+        return "deleted";
     }
 
 }

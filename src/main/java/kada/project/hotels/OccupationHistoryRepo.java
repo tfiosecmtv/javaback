@@ -9,4 +9,5 @@ public interface OccupationHistoryRepo extends JpaRepository<OccupationHistory, 
     List<OccupationHistory> findByRoomtype(String room_type);
     List<OccupationHistory> findByRoomnumber(Integer room_number);
     List<OccupationHistory> findByGuestid(Long guest_id);
+    List<OccupationHistory> findByBookingid(Long booking_id);
 }

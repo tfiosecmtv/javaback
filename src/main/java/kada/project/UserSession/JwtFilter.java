@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 import static org.springframework.util.StringUtils.hasText;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 
 @Component
 @Log
@@ -32,12 +33,27 @@ public class JwtFilter extends GenericFilterBean {
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         logger.info("do filter...");
         String token = getTokenFromRequest((HttpServletRequest) servletRequest);
-        if (token != null && jwtProvider.validateToken(token)) {
+        System.out.println(token);
+        System.out.println(jwtProvider.hashmap.size());
+
+        if (token != null && jwtProvider.validateToken(token) && jwtProvider.hashmap.containsKey( token ) == false) {
             String userLogin = jwtProvider.getLoginFromToken(token);
+            System.out.println(userLogin);
             CustomUserDetails customUserDetails = customUserDetailsService.loadUserByUsername(userLogin);
+            System.out.println("guessst");
             UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(auth);
-        }
+        } else if(token != null && jwtProvider.validateToken(token)){
+            String userLogin = jwtProvider.getLoginFromToken(token);
+            System.out.println(userLogin);
+            CustomUserDetails customUserDetails = customUserDetailsService.loadEmployeeByUsername(userLogin);
+            System.out.println(customUserDetails.getAuthorities());
+            System.out.println(customUserDetails.getPassword());
+            System.out.println("employeeee");
+            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(customUserDetails, null, customUserDetails.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(auth);
+        } else if(token == null) SecurityContextHolder.getContext().setAuthentication(null);
+        System.out.println("proceed");
         filterChain.doFilter(servletRequest, servletResponse);
     }
 

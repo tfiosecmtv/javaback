@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+import kada.project.Employee.Employee;
 
 public class CustomUserDetails implements UserDetails {
 
@@ -20,6 +21,15 @@ public class CustomUserDetails implements UserDetails {
         c.login = userEntity.getEmail();
         c.password = userEntity.getPassword();
         c.grantedAuthorities = Collections.singletonList(new SimpleGrantedAuthority(userEntity.getRole()));
+        return c;
+    }
+
+    public static CustomUserDetails fromEmployeeEntityToCustomUserDetails(Employee employee) {
+        CustomUserDetails c = new CustomUserDetails();
+        c.login = employee.getEmail();
+        c.password = employee.getPassword();
+        System.out.println("employeeeeeee " + employee.getRole());
+        c.grantedAuthorities = Collections.singletonList(new SimpleGrantedAuthority(employee.getRole()));
         return c;
     }
 

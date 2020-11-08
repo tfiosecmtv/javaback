@@ -40,13 +40,15 @@ class RoomTypeInfo {
     public Integer capacity;
     public Integer howmanyavailable;
     public Integer price;
+    List<Integer> roomnumbers;
 
-    RoomTypeInfo(String type, Float size, Integer capacity, Integer howmanyavailable, Integer price) {
+    RoomTypeInfo(String type, Float size, Integer capacity, Integer howmanyavailable, Integer price, List<Integer> roomnumbers) {
         this.type = type;
         this.size = size;
         this.capacity = capacity;
         this.howmanyavailable = howmanyavailable;
         this.price = price;
+        this.roomnumbers = roomnumbers;
     }
 
     RoomTypeInfo getRoomTypeInfo() {

@@ -183,7 +183,12 @@ public class HotelRest {
                     }
                     cStart.add(Calendar.DAY_OF_MONTH, 1);
                 }
-                hashMap.get( l ).roomTypeInfoList.add( new RoomTypeInfo( roomType.getName(), roomType.getSize(),roomType.getCapacity(), s, price ) );
+                List<Room> roomms = hashMap.get( l ).hashmap.get( roomType.getName() );
+                List<Integer> roomnumbers = new ArrayList<Integer>();
+                for (Room r : roomms) {
+                    roomnumbers.add( r.getRoomnumber() );
+                }
+                hashMap.get( l ).roomTypeInfoList.add( new RoomTypeInfo( roomType.getName(), roomType.getSize(),roomType.getCapacity(), s, price, roomnumbers ) );
             }
         }
         Map<String, Object> theMap = new LinkedHashMap<>();

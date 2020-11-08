@@ -71,7 +71,16 @@ public class OccupationHistory {
     Date fromdate;
     @Column(name = "to_date")
     Date todate;
+    @Column(name = "booking_id")
+    Long bookingid;
 
+    public Long getBooking_id() {
+        return bookingid;
+    }
+
+    public void setBooking_id(Long bookingid) {
+        this.bookingid = bookingid;
+    }
 
     public Long getHotel_id() {
         return hotelid;

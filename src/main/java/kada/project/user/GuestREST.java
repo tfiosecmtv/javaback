@@ -26,7 +26,7 @@ public class GuestREST {
     private JwtProvider jwtProvider;
 
     //get guests
-    @GetMapping("/guests")
+    @GetMapping("/allguests")
     public List<Guest> getAllGuests() {
         return this.userRepo.findAll();
     }

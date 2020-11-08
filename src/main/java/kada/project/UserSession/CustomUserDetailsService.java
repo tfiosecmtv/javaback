@@ -13,7 +13,12 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public CustomUserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        System.out.println("started checking");
         Guest userEntity = userService.findByLogin(email);
         return CustomUserDetails.fromUserEntityToCustomUserDetails(userEntity);
+    }
+
+    public CustomUserDetails loadEmployeeByUsername(String email) throws UsernameNotFoundException {
+        return CustomUserDetails.fromEmployeeEntityToCustomUserDetails(userService.findEmployeeByLogin( email ));
     }
 }
