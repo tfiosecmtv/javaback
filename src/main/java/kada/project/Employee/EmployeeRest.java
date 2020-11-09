@@ -4,6 +4,7 @@ import kada.project.UserSession.CustomUserDetails;
 import kada.project.UserSession.CustomUserDetailsService;
 import kada.project.UserSession.JwtProvider;
 import kada.project.UserSession.UserService;
+import kada.project.bookinghistory.Booking;
 import kada.project.bookinghistory.BookingHistory;
 import kada.project.bookinghistory.BookingHistoryREST;
 import kada.project.bookinghistory.BookingHistoryRepo;
@@ -11,6 +12,7 @@ import kada.project.hotels.*;
 import kada.project.room.RoomType;
 import kada.project.room.RoomTypeRepo;
 import kada.project.user.Guest;
+import kada.project.user.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,11 +46,25 @@ public class EmployeeRest {
     private HotelSeasonsRepo hotelSeasonsRepo;
     @Autowired
     private SeasonsRepo seasonsRepo;
+    @Autowired
+    private UserRepo userRepo;
 
 //    @GetMapping("/employee/getemployee")
 //    public List<Employee> findAllEmployees() {
 //        System.out.println("curr  " + SecurityContextHolder.getContext().getAuthentication().getAuthorities()); return employeeRepo.findAll();
 //    }
+
+    @PutMapping("/deskclerk/findguest")
+    public List<BookingHistory> getguestsbooking(@Validated @RequestBody Guest guest) {
+        List<BookingHistory> bookingHistoryList = new ArrayList<BookingHistory>();
+        List<Guest> guestList = userRepo.findByFirstNameAndLastName( guest.getFirstName(), guest.getLastName() );
+        System.out.println(guest.getFirstName());
+        System.out.println(guest.getLastName());
+        for(Guest guest1 : guestList) {
+            bookingHistoryList.addAll( bookingHistoryRepo.findByGuestid( guest1.getUserId() ) );
+        }
+        return bookingHistoryList;
+    }
 
     @PostMapping("/logindeskclerk")
     public ResponseEntity<Employee> getGuestByEmail(@Validated @RequestBody Employee empl) {
@@ -81,7 +97,7 @@ public class EmployeeRest {
         return ResponseEntity.ok().body(bookingHistory);
     }
 
-    @PutMapping("/cancelbooking/{bh_id}/{number_of_rooms}") //change status
+    @PutMapping("/deskclerk/cancelbooking/{bh_id}/{number_of_rooms}") //change status
     public ResponseEntity<BookingHistory> changeStatus(@PathVariable(value = "bh_id") Long bh_id, @PathVariable(value = "number_of_rooms") Integer number_of_rooms) {
         BookingHistory bookingHistory = bookingHistoryRepo.findByBookingid( bh_id );
         System.out.println(bookingHistory.getGuestid());
@@ -138,7 +154,7 @@ public class EmployeeRest {
         return ResponseEntity.ok().body(bookingHistory);
     }
 
-    @PostMapping("/changebooking")
+    @PostMapping("/deskclerk/changebooking")
     public ResponseEntity<BookingHistory> changeBooking(@Validated @RequestBody BookingHistory bookingHistory) {
         BookingHistory toDelete = bookingHistoryRepo.findByBookingid( bookingHistory.getBookingid() );
         bookingHistoryRepo.delete( toDelete );

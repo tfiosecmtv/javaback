@@ -82,8 +82,8 @@ public class GuestREST {
                                                    @Validated @RequestBody Guest guestDets)  {
         Guest guest = userRepo.findById(userId)
                 .orElseThrow();
-        guest.setLastName(guestDets.getLastName());
         guest.setFirstName(guestDets.getFirstName());
+        guest.setLastName(guestDets.getLastName());
         guest.setUserId(guestDets.getUserId());
         guest.setDocumentId(guestDets.getDocumentId());
         guest.setDocumentType(guestDets.getDocumentType());

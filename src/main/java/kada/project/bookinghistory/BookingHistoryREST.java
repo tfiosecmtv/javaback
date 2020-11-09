@@ -154,6 +154,7 @@ public class BookingHistoryREST {
     }
 
     //delete
+    
 
     @DeleteMapping("/bookinghistory/{booking_id}")
     public String deleteBooking(@PathVariable(value = "booking_id") Long booking_id)

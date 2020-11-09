@@ -6,8 +6,8 @@ import javax.persistence.*;
 @Table(name = "guests")
 public class Guest {
     private Long userId;
-    private String firstName;
-    private String lastName;
+
+
     private String email;
     private String password;
     private String home;
@@ -47,6 +47,7 @@ public class Guest {
     }
 
     @Column(name = "first_name")
+    private String firstName;
     public String getFirstName() {
         return firstName;
     }
@@ -55,6 +56,7 @@ public class Guest {
     }
 
     @Column(name = "last_name")
+    private String lastName;
     public String getLastName() {
         return lastName;
     }
