@@ -29,7 +29,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.ALWAYS)
                 .and()
                 .authorizeRequests()
-                .antMatchers("/api/deskclerk/*").permitAll()//hasAuthority("DESKCLERK")
+                .antMatchers("/api/deskclerk/*").hasAuthority("DESKCLERK")
                 .antMatchers("/api/guests").hasAuthority("GUEST")
                 .antMatchers("/api/signup", "/api/login").permitAll()
                 .and()
