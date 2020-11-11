@@ -68,16 +68,16 @@ public class BookingHistoryREST {
     public ResponseEntity addService(@Validated @RequestBody GuestUsesService guestUsesService) {
         System.out.println(guestUsesService.getHotel_id()); //
         System.out.println(guestUsesService.getGuest_id());
-        System.out.println(guestUsesService.getBooking_id());
+        System.out.println(guestUsesService.getBookingid());
         System.out.println(guestUsesService.getRoom_type()); //
         System.out.println(guestUsesService.getService());
-        System.out.println(guestUsesService.getHow_many_timestimes()); //
-        BookingHistory bookingHistory = bookingHistoryRepo.findByBookingidAndRoomtype(guestUsesService.getBooking_id(), guestUsesService.getRoom_type());
+        System.out.println(guestUsesService.getHow_many_times()); //
+        BookingHistory bookingHistory = bookingHistoryRepo.findByBookingidAndRoomtype(guestUsesService.getBookingid(), guestUsesService.getRoom_type());
         HotelServices hotelServices = hotelServicesRepo.findByHotelidAndService( bookingHistory.hotelid, guestUsesService.getService() );
-        bookingHistory.setService_price( bookingHistory.getService_price() + hotelServices.getPrice()*guestUsesService.getHow_many_timestimes() );
-        bookingHistory.setPrice( bookingHistory.getPrice() + hotelServices.getPrice()*guestUsesService.getHow_many_timestimes() );
+        bookingHistory.setService_price( bookingHistory.getService_price() + hotelServices.getPrice()*guestUsesService.getHow_many_times() );
+        bookingHistory.setPrice( bookingHistory.getPrice() + hotelServices.getPrice()*guestUsesService.getHow_many_times() );
         bookingHistoryRepo.save( bookingHistory );
-        guestUsesService.setHow_many_times( guestUsesService.getHow_many_timestimes()+1 );
+        guestUsesService.setHow_many_times( guestUsesService.getHow_many_times()+1 );
         guestUsesServicesRepo.save( guestUsesService );
 
         return new ResponseEntity("success!!!", HttpStatus.OK);

@@ -4,10 +4,7 @@ import kada.project.UserSession.CustomUserDetails;
 import kada.project.UserSession.CustomUserDetailsService;
 import kada.project.UserSession.JwtProvider;
 import kada.project.UserSession.UserService;
-import kada.project.bookinghistory.Booking;
-import kada.project.bookinghistory.BookingHistory;
-import kada.project.bookinghistory.BookingHistoryREST;
-import kada.project.bookinghistory.BookingHistoryRepo;
+import kada.project.bookinghistory.*;
 import kada.project.hotels.*;
 import kada.project.room.RoomType;
 import kada.project.room.RoomTypeRepo;
@@ -52,11 +49,13 @@ public class EmployeeRest {
     private UserRepo userRepo;
     @Autowired
     private RoomRepo roomRepo;
+    @Autowired
+    private GuestUsesServicesRepo guestUsesServiceRepo;
 
-//    @GetMapping("/employee/getemployee")
-//    public List<Employee> findAllEmployees() {
-//        System.out.println("curr  " + SecurityContextHolder.getContext().getAuthentication().getAuthorities()); return employeeRepo.findAll();
-//    }
+    @GetMapping("/employee/getemployee")
+    public List<Employee> findAllEmployees() {
+        return employeeRepo.findAll();
+    }
 
     @PutMapping("/deskclerk/findguest")
     public List<BookingHistory> getguestsbooking(@Validated @RequestBody Guest guest) {
@@ -162,6 +161,7 @@ public class EmployeeRest {
     @PostMapping("/deskclerk/changebooking")
     public ResponseEntity<BookingHistory> changeBooking(@Validated @RequestBody BookingHistory bookingHistory) {
         String prevroomtype = bookingHistoryRepo.findByBookingid( bookingHistory.getBookingid() ).getRoomtype();
+
         bookingHistory.setPrice( 0 );
         Date start = bookingHistory.getDate_reservation();
         Date end = bookingHistory.getDue_date();
@@ -204,8 +204,12 @@ public class EmployeeRest {
         }
         bookingHistory.setPrice( bookingHistory.getPrice()*bookingHistory.getNumber_of_rooms());
         bookingHistoryRepo.save(bookingHistory);
-
-//        bookingHistoryRepo.delete( bookingHistoryRepo.findByBookingidAndRoomtype( bookingHistory.getBookingid(), prevroomtype ) );
+        List<GuestUsesService> guestUsesService = guestUsesServiceRepo.findByBookingid( bookingHistory.getBookingid() );
+        for (GuestUsesService guestUsesService1 : guestUsesService) {
+            guestUsesService1.setRoom_type( bookingHistory.getRoomtype() )
+            ; guestUsesServiceRepo.save( guestUsesService1 );
+        }
+        bookingHistoryRepo.delete( bookingHistoryRepo.findByBookingidAndRoomtype( bookingHistory.getBookingid(), prevroomtype ) );
 
 
         List<OccupationHistory> occupationHistory = occupationHistoryRepo.findByBookingidAndRoomtype( bookingHistory.getBookingid(), prevroomtype );

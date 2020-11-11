@@ -110,11 +110,11 @@ public class GuestUsesService {
         this.guest_id = guest_id;
     }
 
-    public Long getBooking_id() {
+    public Long getBookingid() {
         return bookingid;
     }
 
-    public void setBooking_id(Long booking_id) {
+    public void setBookingid(Long booking_id) {
         this.bookingid = booking_id;
     }
 
@@ -134,7 +134,7 @@ public class GuestUsesService {
         this.service = service;
     }
 
-    public Integer getHow_many_timestimes() {
+    public Integer getHow_many_times() {
         return how_many_times;
     }
 
