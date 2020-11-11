@@ -62,7 +62,7 @@ public class HotelRest {
             List<Room> rooms = new ArrayList<Room>();
             for(Room room : roomList) {
                 for(OccupationHistory occupationHistory : occupationHistoryList) {
-                    if(occupationHistory.getRoom_number().compareTo( room.getRoomnumber() ) == 0) {
+                    if(occupationHistory.getRoomnumber().compareTo( room.getRoomnumber() ) == 0) {
                         rooms.add( room );
                     }
                 }
@@ -98,7 +98,7 @@ public class HotelRest {
                 // when we finish iterating over dates, if there was not overlap we can add this room to available rooms
                 if(overlap == false)
                 {
-                    availableRoomList.add(roomRepo.findByHotelidAndRoomnumber( hotelEntity.getHotel_id(), occupationHistory.getRoom_number() ));
+                    availableRoomList.add(roomRepo.findByHotelidAndRoomnumber( hotelEntity.getHotel_id(), occupationHistory.getRoomnumber() ));
                 }
 
             }

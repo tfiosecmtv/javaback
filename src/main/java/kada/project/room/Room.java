@@ -2,6 +2,7 @@ package kada.project.room;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.*;
 
 class RoomId implements Serializable {
     Long hotelid;
@@ -56,7 +57,7 @@ public class Room {
     @Column(name = "floor")
     Integer floor;
     @Column(name = "last_cleaned")
-    String lastcleaned;
+    Date lastcleaned;
 
     public Long getHotelid() {
         return hotelid;
@@ -90,11 +91,11 @@ public class Room {
         this.floor = floor;
     }
 
-    public String getLastcleaned() {
+    public Date getLastcleaned() {
         return lastcleaned;
     }
 
-    public void setLastcleaned(String lastcleaned) {
+    public void setLastcleaned(Date lastcleaned) {
         this.lastcleaned = lastcleaned;
     }
 }

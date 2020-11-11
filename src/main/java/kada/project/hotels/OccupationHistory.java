@@ -74,11 +74,11 @@ public class OccupationHistory {
     @Column(name = "booking_id")
     Long bookingid;
 
-    public Long getBooking_id() {
+    public Long getBookingid() {
         return bookingid;
     }
 
-    public void setBooking_id(Long bookingid) {
+    public void setBookingid(Long bookingid) {
         this.bookingid = bookingid;
     }
 
@@ -106,11 +106,11 @@ public class OccupationHistory {
         this.roomtype = room_type;
     }
 
-    public Integer getRoom_number() {
+    public Integer getRoomnumber() {
         return roomnumber;
     }
 
-    public void setRoom_number(Integer room_number) {
+    public void setRoomnumber(Integer room_number) {
         this.roomnumber = room_number;
     }
 

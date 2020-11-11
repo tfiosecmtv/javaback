@@ -9,6 +9,7 @@ public interface BookingHistoryRepo extends JpaRepository<BookingHistory, Long> 
     List<BookingHistory> findByHotelid(Long hotel_id);
     List<BookingHistory> findByRoomtype(Long room_type);
     BookingHistory findByBookingid(Long booking_id);
+    BookingHistory findByBookingidAndRoomtype(Long booking_id, String room_type);
     List<BookingHistory> findByHotelidAndRoomtype(Long hotel_id, String room_type);
 }
 

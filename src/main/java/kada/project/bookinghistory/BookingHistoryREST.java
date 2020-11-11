@@ -72,7 +72,7 @@ public class BookingHistoryREST {
         System.out.println(guestUsesService.getRoom_type()); //
         System.out.println(guestUsesService.getService());
         System.out.println(guestUsesService.getHow_many_timestimes()); //
-        BookingHistory bookingHistory = bookingHistoryRepo.findByBookingid(guestUsesService.getBooking_id());
+        BookingHistory bookingHistory = bookingHistoryRepo.findByBookingidAndRoomtype(guestUsesService.getBooking_id(), guestUsesService.getRoom_type());
         HotelServices hotelServices = hotelServicesRepo.findByHotelidAndService( bookingHistory.hotelid, guestUsesService.getService() );
         bookingHistory.setService_price( bookingHistory.getService_price() + hotelServices.getPrice()*guestUsesService.getHow_many_timestimes() );
         bookingHistory.setPrice( bookingHistory.getPrice() + hotelServices.getPrice()*guestUsesService.getHow_many_timestimes() );
@@ -82,6 +82,8 @@ public class BookingHistoryREST {
 
         return new ResponseEntity("success!!!", HttpStatus.OK);
     }
+
+
 
     @PostMapping("/bookinghistory/addoccupation")
     public OccupationHistory addoh(@Validated @RequestBody OccupationHistory occupationHistory)  {
