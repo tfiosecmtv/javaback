@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface SeasonsRepo extends JpaRepository<Seasons, String> {
     Seasons findSeasonsByName(String name);
+
 }

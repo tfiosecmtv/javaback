@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface HotelSeasonsRepo extends JpaRepository<HotelSeasons, SeasonsId> {
     List<HotelSeasons> findByHotelid(Long hotel_id);
+    HotelSeasons findBySeason(String name);
 }

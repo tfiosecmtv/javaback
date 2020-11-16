@@ -71,6 +71,7 @@ public class HotelSeasons {
     public void setAdd_price(int add_price) {
         this.add_price = add_price;
     }
+
 }
 
 

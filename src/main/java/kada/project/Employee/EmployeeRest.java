@@ -1,6 +1,5 @@
 package kada.project.Employee;
 
-import kada.project.UserSession.CustomUserDetails;
 import kada.project.UserSession.CustomUserDetailsService;
 import kada.project.UserSession.JwtProvider;
 import kada.project.UserSession.UserService;
@@ -13,15 +12,20 @@ import kada.project.user.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import kada.project.room.Room;
 import kada.project.room.RoomRepo;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.io.*;
+import javax.mail.*;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.InternetAddress;
 import java.util.*;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMultipart;
 @RestController
 @RequestMapping("/api")
 public class EmployeeRest {
@@ -69,14 +73,20 @@ public class EmployeeRest {
         return bookingHistoryList;
     }
 
-    @PostMapping("/logindeskclerk")
+    @PostMapping("/loginemployee")
     public ResponseEntity<Employee> getGuestByEmail(@Validated @RequestBody Employee empl) {
         Employee employee = userService.findEmployeeByLoginAndPassword(empl.getEmail(), empl.getPassword()); //ok
         String token = jwtProvider.generateToken(empl.getEmail()); //ok
         employee.setToken( token );
         System.out.println(token);
-        jwtProvider.hashmap.put( token, "deskclerk" );
-        employee.setRole( "DESKCLERK" );
+        if(employee.getJob_title().equals( "Desk Clerk" )) {
+            jwtProvider.hashmap.put( token, "DESKCLERK" );
+            employee.setRole( "DESKCLERK" );
+        } else if(employee.getJob_title().equals( "Manager" )){
+            jwtProvider.hashmap.put( token, "MANAGER" );
+            employee.setRole( "MANAGER" );
+        }
+
         employeeRepo.save( employee );
         return ResponseEntity.ok().body(employee);
     }
@@ -281,6 +291,77 @@ public class EmployeeRest {
 
         return ResponseEntity.ok().body("cannot change!!!!");
 
+    }
+
+    @PostMapping("/sendemail")
+    public String sendEmail(@Validated @RequestBody Mail mail) throws AddressException, MessagingException, IOException {
+        sendmail(mail.title, mail.price, mail.message);
+        return "Email sent successfully";
+    }
+
+    @GetMapping("/manager/getallseasons/{hotelid}")
+    public List<HotelSeasons> getAllSeasons(@PathVariable("hotelid") Long hotelid) {
+        return hotelSeasonsRepo.findByHotelid( hotelid );
+    }
+
+    @PostMapping("/manager/addseason")
+    public ResponseEntity addSeason(@Validated @RequestBody HotelSeasons hotelSeasons) {
+        List<HotelSeasons> hotelSeasonsList = hotelSeasonsRepo.findByHotelid( hotelSeasons.getHotelid() );
+        System.out.println(hotelSeasons.getSeason());
+        System.out.println(hotelSeasons.getAdd_price());
+        System.out.println(hotelSeasons.getHotelid());
+        List<DateInterval> dateIntervalList = new ArrayList<>();
+        hotelSeasonsList.add( hotelSeasons );
+        for(HotelSeasons hotelSeason : hotelSeasonsList) {
+            Seasons seasons = seasonsRepo.findSeasonsByName( hotelSeason.getSeason() );
+            dateIntervalList.add( new DateInterval( seasons.getStart_date(), seasons.getEnd_date() ) );
+        }
+        String ans = new Filter().findOverlap( dateIntervalList );
+        if(ans.equals( "It’s a clean list" )) {
+            hotelSeasonsRepo.save( hotelSeasons);
+            return ResponseEntity.ok().body(hotelSeasons);
+        }
+        return ResponseEntity.ok().body("cannot add!!!!");
+    }
+
+    @DeleteMapping("/manager/deleteseason/{name}")
+    public ResponseEntity deleteSeason(@PathVariable("name") String name) {
+        HotelSeasons hotelSeasons = hotelSeasonsRepo.findBySeason( name );
+        hotelSeasonsRepo.delete( hotelSeasons );
+        return ResponseEntity.ok().body("deleted!");
+    }
+
+    private void sendmail(String title, Integer price, String message) throws AddressException, MessagingException, IOException {
+        Properties props = new Properties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.host", "smtp.gmail.com");
+        props.put("mail.smtp.port", "587");
+        
+        Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication("kadahotelchain@gmail.com", "KADAhotel123");
+            }
+        });
+        Message msg = new MimeMessage(session);
+        msg.setFrom(new InternetAddress("kadahotelchain@gmail.com", false));
+
+        msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse("tfiosecmtv@gmail.com"));
+        msg.setSubject(title);
+        msg.setContent(message, "text/html");
+        msg.setSentDate(new Date());
+
+        MimeBodyPart messageBodyPart = new MimeBodyPart();
+        messageBodyPart.setContent(message, "text/html");
+
+        Multipart multipart = new MimeMultipart();
+        multipart.addBodyPart(messageBodyPart);
+        MimeBodyPart attachPart = new MimeBodyPart();
+
+        //attachPart.attachFile("/var/tmp/image19.png");
+        //multipart.addBodyPart(attachPart);
+        msg.setContent(multipart);
+        Transport.send(msg);
     }
 
 
