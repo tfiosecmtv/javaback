@@ -26,6 +26,7 @@ import javax.mail.internet.InternetAddress;
 import java.util.*;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimeMessage.RecipientType;
 @RestController
 @RequestMapping("/api")
 public class EmployeeRest {
@@ -337,7 +338,7 @@ public class EmployeeRest {
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.smtp.host", "smtp.gmail.com");
         props.put("mail.smtp.port", "587");
-        
+
         Session session = Session.getInstance(props, new javax.mail.Authenticator() {
             protected PasswordAuthentication getPasswordAuthentication() {
                 return new PasswordAuthentication("kadahotelchain@gmail.com", "KADAhotel123");
@@ -346,7 +347,16 @@ public class EmployeeRest {
         Message msg = new MimeMessage(session);
         msg.setFrom(new InternetAddress("kadahotelchain@gmail.com", false));
 
-        msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse("tfiosecmtv@gmail.com"));
+        List<Address> addressList = new ArrayList<>();
+        List<Guest> guestList = userRepo.findAll();
+
+        for (Guest guest : guestList) {
+            if(guest.getPrice() >= price)
+                addressList.add( new InternetAddress(guest.getEmail()) );
+        }
+
+        msg.addRecipients( RecipientType.TO, addressList.toArray(new Address[addressList.size()]) );
+        //msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse("tfiosecmtv@gmail.com"));
         msg.setSubject(title);
         msg.setContent(message, "text/html");
         msg.setSentDate(new Date());

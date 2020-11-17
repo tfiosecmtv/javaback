@@ -16,6 +16,7 @@ public class Guest {
     private String documentId;
     private String address;
     private String token;
+    private Integer price;
     private String role = "GUEST";
 
 
@@ -134,6 +135,14 @@ public class Guest {
     }
     public void setRole(String role) {
         this.role = role;
+    }
+
+    @Column(name = "price")
+    public Integer getPrice() {
+        return price;
+    }
+    public void setPrice(Integer price) {
+        this.price = price;
     }
 
 }
