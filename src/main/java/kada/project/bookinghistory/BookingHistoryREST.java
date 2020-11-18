@@ -1,6 +1,8 @@
 package kada.project.bookinghistory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import kada.project.Employee.DateInterval;
+import kada.project.Employee.Filter;
 import kada.project.hotels.*;
 import kada.project.room.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,49 +93,53 @@ public class BookingHistoryREST {
         return occupationHistory;
     }
 
-    @PostMapping("/bookinghistory")
-    public BookingHistory signup(@Validated @RequestBody BookingHistory bookingHistory) {
-        System.out.println("in "+ bookingHistory.getGuestid());
-        Date start = bookingHistory.getDate_reservation();
-        Date end = bookingHistory.getDue_date();
+    int price(Date s, Date e,String roomtypename, Long hotelid) {
+        int price = 0;
+        Date start = s;
+        Date end = e;
         Calendar cStart = Calendar.getInstance();
         cStart.setTime( start );
-        cStart.add( Calendar.DAY_OF_MONTH,-1 );
         Calendar cEnd = Calendar.getInstance();
         cEnd.setTime( end );
-        RoomType roomType = roomTypeRepo.findByHotelidAndName( bookingHistory.getHotelid(), bookingHistory.getRoomtype() );
+        cEnd.add( Calendar.DAY_OF_MONTH,1 );
+        RoomType roomType = roomTypeRepo.findByHotelidAndName( hotelid, roomtypename );
         while(cStart.before( cEnd )) {
             if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_mon() );
+                price += roomType.getBase_price_mon() ;
             else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.TUESDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_tue() );
+                price += roomType.getBase_price_tue() ;
             else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.WEDNESDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_wed() );
+                price += roomType.getBase_price_wed() ;
             else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.THURSDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_thu() );
+                price += roomType.getBase_price_thu() ;
             else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_fri() );
+                price += roomType.getBase_price_fri() ;
             else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_sat() );
+                price += roomType.getBase_price_sat() ;
             else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_sun() );
+                price += roomType.getBase_price_sun() ;
             cStart.add(Calendar.DAY_OF_MONTH, 1);
         }
         cStart.setTime( start );
-        cStart.add( Calendar.DAY_OF_MONTH,-1 );
-        List<HotelSeasons> hotelSeasons = hotelSeasonsRepo.findByHotelid( bookingHistory.getHotelid() );
-        while (cStart.before( cEnd )) {
-            for(HotelSeasons hotelseason : hotelSeasons ) {
+
+        List<HotelSeasons> hotelSeasons = hotelSeasonsRepo.findByHotelid( hotelid );
+        while(start.before( end ) || start.equals( end )) {
+            for(HotelSeasons hotelseason : hotelSeasons) {
                 Seasons season = seasonsRepo.findSeasonsByName( hotelseason.getSeason() );
-                if(cStart.getTime().getTime() >= season.getStart_date().getTime() &&
-                        cStart.getTime().getTime() <= season.getEnd_date().getTime()) {
-                    bookingHistory.setPrice( bookingHistory.getPrice()+hotelseason.getAdd_price() );
-                    break;
-                }
+                Filter filter = new Filter();
+                if(filter.overlaps( new DateInterval( start, start ),  new DateInterval( season.getStart_date(), season.getEnd_date() )))
+                    price += hotelseason.getAdd_price();
             }
-            cStart.add(Calendar.DAY_OF_MONTH, 1);
+            start = new Date(start.getTime() + (1000 * 60 * 60 * 24));
         }
-        bookingHistory.setPrice( bookingHistory.getPrice()*bookingHistory.getNumber_of_rooms());
+        return price;
+    }
+
+    @PostMapping("/bookinghistory")
+    public BookingHistory signup(@Validated @RequestBody BookingHistory bookingHistory) {
+        bookingHistory.setPrice(bookingHistory.number_of_rooms*price( bookingHistory.date_reservation, bookingHistory.due_date, bookingHistory.roomtype, bookingHistory.hotelid ) );
+
+        bookingHistoryRepo.save(bookingHistory);
         return bookingHistoryRepo.save(bookingHistory);
     }
     //update

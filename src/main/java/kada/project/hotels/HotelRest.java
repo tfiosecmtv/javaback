@@ -16,7 +16,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import kada.project.Employee.*;
 
+import javax.persistence.criteria.CriteriaBuilder;
 import java.util.*;
 
 @RestController
@@ -52,152 +54,106 @@ public class HotelRest {
         return hotelEntityRepo.save(hotelEntity);
     }
 
+    int price(HotelFilter hotelFilter, String roomtypename, Long hotelid) {
+        int price = 0;
+        Date start = hotelFilter.getStartdate();
+        Date end = hotelFilter.getDuedate();
+        Calendar cStart = Calendar.getInstance();
+        cStart.setTime( start );
+        Calendar cEnd = Calendar.getInstance();
+        cEnd.setTime( end );
+        cEnd.add( Calendar.DAY_OF_MONTH,1 );
+        RoomType roomType = roomTypeRepo.findByHotelidAndName( hotelid, roomtypename );
+        while(cStart.before( cEnd )) {
+            if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY)
+                 price += roomType.getBase_price_mon() ;
+            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.TUESDAY)
+                price += roomType.getBase_price_tue() ;
+            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.WEDNESDAY)
+                price += roomType.getBase_price_wed() ;
+            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.THURSDAY)
+                price += roomType.getBase_price_thu() ;
+            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY)
+                price += roomType.getBase_price_fri() ;
+            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
+                price += roomType.getBase_price_sat() ;
+            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
+                price += roomType.getBase_price_sun() ;
+            cStart.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        cStart.setTime( start );
+
+        List<HotelSeasons> hotelSeasons = hotelSeasonsRepo.findByHotelid( hotelid );
+//        while (cStart.before( cEnd )) {
+//            for(HotelSeasons hotelseason : hotelSeasons ) {
+//                Seasons season = seasonsRepo.findSeasonsByName( hotelseason.getSeason() );
+//                if(cStart.getTime().getTime() >= season.getStart_date().getTime() &&
+//                        cStart.getTime().getTime() <= season.getEnd_date().getTime()) {
+//                    price += hotelseason.getAdd_price() ;
+//                    break;
+//                }
+//            }
+//            cStart.add(Calendar.DAY_OF_MONTH, 1);
+//        }
+        while(start.before( end ) || start.equals( end )) {
+             for(HotelSeasons hotelseason : hotelSeasons) {
+                 Seasons season = seasonsRepo.findSeasonsByName( hotelseason.getSeason() );
+                 Filter filter = new Filter();
+                 if(filter.overlaps( new DateInterval( start, start ),  new DateInterval( season.getStart_date(), season.getEnd_date() )))
+                     price += hotelseason.getAdd_price();
+            }
+             start = new Date(start.getTime() + (1000 * 60 * 60 * 24));
+        }
+        return price;
+    }
+
     @PostMapping("/hotels/filter")
     public ResponseEntity getHotelInfoByCity(@RequestBody HotelFilter hotelFilter)  throws JsonProcessingException{
         List<HotelEntity> hotelEntityList = hotelEntityRepo.findByCity( hotelFilter.getCity() );
-        List<Room> availableRoomList = new ArrayList<Room>();
+        List<HotelFilterResult> hotelFilterResultList = new ArrayList<>();
+
         for(HotelEntity hotelEntity : hotelEntityList) {
-            List<OccupationHistory> occupationHistoryList = occupationHistoryRepo.findByHotelid( hotelEntity.getHotel_id());
-            List<Room> roomList = roomRepo.findByHotelid( hotelEntity.getHotel_id() );
-            List<Room> rooms = new ArrayList<Room>();
-            for(Room room : roomList) {
-                for(OccupationHistory occupationHistory : occupationHistoryList) {
-                    if(occupationHistory.getRoomnumber().compareTo( room.getRoomnumber() ) == 0) {
-                        rooms.add( room );
-                    }
-                }
-            }
-            roomList.removeAll( rooms );
-            availableRoomList.addAll( roomList );
-            Calendar cStart = Calendar.getInstance();
-            Calendar cEnd = Calendar.getInstance();
-            cEnd.setTime( hotelFilter.getDuedate() );
-            cEnd.add( Calendar.DAY_OF_MONTH,1 );
+            HotelFilterResult hotelFilterResult = new HotelFilterResult(hotelEntity);
+            List<RoomType> roomTypeList = roomTypeRepo.findByHotelid(hotelEntity.getHotel_id());
+            for(RoomType roomType : roomTypeList) {
 
-            for (OccupationHistory occupationHistory: occupationHistoryList) {
-                cStart.setTime( hotelFilter.getStartdate() );
-                Boolean overlap = false;
-                while(cStart.before( cEnd )) {
-                    cStart.set(Calendar.HOUR_OF_DAY, 0);
-                    cStart.set(Calendar.HOUR, 0);
-                    cStart.set(Calendar.MINUTE, 0);
-                    cStart.set(Calendar.SECOND, 0);
-                    cStart.set(Calendar.MILLISECOND, 0);
-                    if (cStart.getTime().compareTo( occupationHistory.getFrom_date() ) >= 0 && cStart.getTime().compareTo( occupationHistory.getTo_date() ) <= 0)
-                    {
+                List<Room> roomList = roomRepo.findByHotelidAndRoomtype( hotelEntity.getHotel_id(), roomType.getName() );
+                List<Integer> roomnumberlist = new ArrayList<>();
+                for(Room room : roomList) {
 
-                        overlap = true;
-                        break;
+                    List<OccupationHistory> occupationHistoryList = occupationHistoryRepo.findByHotelidAndRoomnumber(  hotelEntity.getHotel_id(), room.getRoomnumber() );
+                    List<DateInterval> dateIntervalList = new ArrayList<>();
+                    dateIntervalList.add( new DateInterval( hotelFilter.getStartdate(), hotelFilter.getDuedate() ) );
+                    for(OccupationHistory occupationHistory : occupationHistoryList) {
+                        dateIntervalList.add( new DateInterval(occupationHistory.getFrom_date(), occupationHistory.getTo_date()) );
                     }
-                    // if current date is does not overlap with record, then we can move to next day
-                else
-                    {
-                        cStart.add(Calendar.DAY_OF_MONTH, 1);
+                    Filter filter = new Filter();
+                    String result = filter.findOverlap( dateIntervalList );
+                    if(result.equals( "It’s a clean list" )) {
+                        roomnumberlist.add( room.getRoomnumber() );
                     }
+
                 }
-                // when we finish iterating over dates, if there was not overlap we can add this room to available rooms
-                if(overlap == false)
-                {
-                    availableRoomList.add(roomRepo.findByHotelidAndRoomnumber( hotelEntity.getHotel_id(), occupationHistory.getRoomnumber() ));
+                if(roomnumberlist.size() != 0) {
+                    int price = price( hotelFilter, roomType.getName(), hotelEntity.getHotel_id() );
+                    RoomTypeInfo roomTypeInfo = new RoomTypeInfo( roomType.getName(), roomType.getSize(), roomType.getCapacity(), roomnumberlist.size(), price, roomnumberlist );
+                    hotelFilterResult.roomTypeInfoList.add(roomTypeInfo);
                 }
 
             }
-            }
-            HashMap<Long, HotelFilterResult> hashMap = new HashMap<Long, HotelFilterResult>();
+            hotelFilterResultList.add( hotelFilterResult );
 
-            for(Room room : availableRoomList) {
-                Long hotel_id = room.getHotelid();
-                if(hashMap.containsKey( hotel_id )) {
-                    if(hashMap.get( hotel_id ).hashmap.containsKey( room.getRoomtype() )) {
-                        hashMap.get( hotel_id ).hashmap.get( room.getRoomtype() ).add( room );
-                    } else {
-                        hashMap.get(hotel_id).hashmap.put( room.getRoomtype(), new ArrayList<Room>());
-                        hashMap.get( hotel_id ).hashmap.get( room.getRoomtype() ).add( room );
-                    }
-                } else {
-                    System.out.println(hotel_id);
-                        HotelEntity he = hotelEntityRepo.findById( hotel_id ).orElseThrow();
-                        hashMap.put(hotel_id, new HotelFilterResult(he));
-                        hashMap.get(hotel_id).hashmap.put( room.getRoomtype(), new ArrayList<Room>());
-                        hashMap.get( hotel_id ).hashmap.get( room.getRoomtype() ).add( room );
-                }
-
-            }    //end of for loop
-
-        System.out.println("quitted room loop");
-        Date start = hotelFilter.getStartdate();
-        Date end = hotelFilter.getDuedate();
-        for(Long l : hashMap.keySet()) {
-            for(String str : hashMap.get( l ).hashmap.keySet()) {
-                RoomType roomType = roomTypeRepo.findByHotelidAndName( hashMap.get( l ).hotelEntity.getHotel_id(), str );
-                Integer s = hashMap.get( l ).hashmap.get( str ).size();
-                Integer price = 0;
-
-                Calendar cStart = Calendar.getInstance();
-                cStart.setTime( start );
-                //cStart.add( Calendar.DAY_OF_MONTH,-1 );
-                Calendar cEnd = Calendar.getInstance();
-
-                cEnd.setTime( end );
-                System.out.println(roomType.getName());
-                while(cStart.before( cEnd )) {
-                    System.out.println(price);
-                    cStart.set(Calendar.HOUR_OF_DAY, 0);
-                    cStart.set(Calendar.HOUR, 0);
-                    cStart.set(Calendar.MINUTE, 0);
-                    cStart.set(Calendar.SECOND, 0);
-                    cStart.set(Calendar.MILLISECOND, 0);
-                    if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY)
-                        price += roomType.getBase_price_mon() ;
-                    else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.TUESDAY)
-                        price += roomType.getBase_price_tue() ;
-                    else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.WEDNESDAY)
-                        price += roomType.getBase_price_wed() ;
-                    else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.THURSDAY)
-                        price += roomType.getBase_price_thu() ;
-                    else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY)
-                        price += roomType.getBase_price_fri() ;
-                    else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
-                        price += roomType.getBase_price_sat() ;
-                    else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
-                        price += roomType.getBase_price_sun() ;
-                    cStart.add(Calendar.DAY_OF_MONTH, 1);
-                }
-                cStart.setTime( start );
-                //cStart.add( Calendar.DAY_OF_MONTH,-1 );
-                List<HotelSeasons> hotelSeasons = hotelSeasonsRepo.findByHotelid( hashMap.get( l ).hotelEntity.getHotel_id() );
-                while (cStart.before( cEnd )) {
-                    System.out.println(price);
-                    cStart.set(Calendar.HOUR_OF_DAY, 0);
-                    cStart.set(Calendar.HOUR, 0);
-                    cStart.set(Calendar.MINUTE, 0);
-                    cStart.set(Calendar.SECOND, 0);
-                    cStart.set(Calendar.MILLISECOND, 0);
-                    for(HotelSeasons hotelseason : hotelSeasons ) {
-                        Seasons season = seasonsRepo.findSeasonsByName( hotelseason.getSeason() );
-                        if(cStart.getTime().getTime() >= season.getStart_date().getTime() &&
-                                cStart.getTime().getTime() <= season.getEnd_date().getTime()) {
-                            price += hotelseason.getAdd_price() ;
-                            break;
-                        }
-                    }
-                    cStart.add(Calendar.DAY_OF_MONTH, 1);
-                }
-                List<Room> roomms = hashMap.get( l ).hashmap.get( roomType.getName() );
-                List<Integer> roomnumbers = new ArrayList<Integer>();
-                for (Room r : roomms) {
-                    roomnumbers.add( r.getRoomnumber() );
-                }
-                hashMap.get( l ).roomTypeInfoList.add( new RoomTypeInfo( roomType.getName(), roomType.getSize(),roomType.getCapacity(), s, price, roomnumbers ) );
-            }
         }
+
         Map<String, Object> theMap = new LinkedHashMap<>();
-        for (HotelFilterResult hotelFilterResult : hashMap.values()) {
+        for (HotelFilterResult hotelFilterResult : hotelFilterResultList) {
             theMap.put(hotelFilterResult.hotelEntity.name, new Result( hotelFilterResult.hotelEntity, hotelFilterResult.roomTypeInfoList ));
         }
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         return new ResponseEntity(ow.writeValueAsString(theMap), HttpStatus.OK);
-        }
+
+
+    }
 
 
     @GetMapping("/hotels/{hotelid}")

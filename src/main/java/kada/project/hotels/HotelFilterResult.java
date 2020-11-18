@@ -25,11 +25,11 @@ class Result {
 public class HotelFilterResult {
     HotelEntity hotelEntity;
     List<RoomTypeInfo> roomTypeInfoList;
-    HashMap<String, List<Room>> hashmap;
+//    HashMap<String, List<Room>> hashmap;
 
     public HotelFilterResult(HotelEntity hotelEntity) {
         this.hotelEntity = hotelEntity;
-        hashmap = new HashMap<String, List<Room>>();
+//        hashmap = new HashMap<String, List<Room>>();
         this.roomTypeInfoList = new ArrayList<RoomTypeInfo>();
     }
 }

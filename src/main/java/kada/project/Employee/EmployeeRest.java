@@ -16,8 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import kada.project.room.Room;
 import kada.project.room.RoomRepo;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-
+import java.text.DateFormat;
 import java.io.*;
 import javax.mail.*;
 import javax.mail.internet.AddressException;
@@ -27,6 +26,15 @@ import java.util.*;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeMessage.RecipientType;
+import java.sql.Timestamp;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.springframework.format.annotation.DateTimeFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+
+
 @RestController
 @RequestMapping("/api")
 public class EmployeeRest {
@@ -56,13 +64,15 @@ public class EmployeeRest {
     private RoomRepo roomRepo;
     @Autowired
     private GuestUsesServicesRepo guestUsesServiceRepo;
+    @Autowired
+    private ScheduleRepo scheduleRepo;
 
-    @GetMapping("/employee/getemployee")
+    @GetMapping("/employee/getemployee") //works
     public List<Employee> findAllEmployees() {
         return employeeRepo.findAll();
     }
 
-    @PutMapping("/deskclerk/findguest")
+    @PutMapping("/deskclerk/findguest") //works
     public List<BookingHistory> getguestsbooking(@Validated @RequestBody Guest guest) {
         List<BookingHistory> bookingHistoryList = new ArrayList<BookingHistory>();
         List<Guest> guestList = userRepo.findByFirstNameAndLastName( guest.getFirstName(), guest.getLastName() );
@@ -74,7 +84,7 @@ public class EmployeeRest {
         return bookingHistoryList;
     }
 
-    @PostMapping("/loginemployee")
+    @PostMapping("/loginemployee") //works
     public ResponseEntity<Employee> getGuestByEmail(@Validated @RequestBody Employee empl) {
         Employee employee = userService.findEmployeeByLoginAndPassword(empl.getEmail(), empl.getPassword()); //ok
         String token = jwtProvider.generateToken(empl.getEmail()); //ok
@@ -92,7 +102,7 @@ public class EmployeeRest {
         return ResponseEntity.ok().body(employee);
     }
 
-    @PostMapping("/deskclerk/logout/{token}")
+    @PostMapping("/deskclerk/logout/{token}") //works
     public ResponseEntity<Employee> LogOut(@PathVariable(value = "token") String token) {
         String email = jwtProvider.getLoginFromToken( token );
         Employee employee = employeeRepo.findByEmail( email );
@@ -103,64 +113,31 @@ public class EmployeeRest {
         return ResponseEntity.ok().body(employee);
     }
 
-    @PutMapping("/deskclerk/changestatusbh/{bh_id}/{roomtype}/{status}") //change status
+    @PutMapping("/changestatusbh/{bh_id}/{roomtype}/{status}") //works
     public ResponseEntity<BookingHistory> changeStatus(@PathVariable(value = "bh_id") Long bh_id, @PathVariable(value = "status") String status, @PathVariable(value = "roomtype") String roomtype) {
         BookingHistory bookingHistory = bookingHistoryRepo.findByBookingidAndRoomtype( bh_id, roomtype );
+        if(status.equals( "past" )) {
+
+            Long guestid = bookingHistory.getGuestid();
+            Guest guest = userRepo.findByUserId( guestid );
+            guest.setPrice( guest.getPrice() +  bookingHistory.getPrice() + bookingHistory.getService_price());
+            userRepo.save( guest );
+        }
         bookingHistory.setStatus( status );
         bookingHistoryRepo.save( bookingHistory );
         return ResponseEntity.ok().body(bookingHistory);
     }
 
-    @PutMapping("/deskclerk/cancelbooking/{bh_id}/{room_type}/{number_of_rooms}") //change status
+    @PutMapping("/cancelbooking/{bh_id}/{room_type}/{number_of_rooms}") //works
     public ResponseEntity<BookingHistory> changeStatus(@PathVariable(value = "bh_id") Long bh_id, @PathVariable(value = "number_of_rooms") Integer number_of_rooms, @PathVariable(value = "room_type") String room_type) {
         BookingHistory bookingHistory = bookingHistoryRepo.findByBookingidAndRoomtype( bh_id, room_type );
         System.out.println(bookingHistory.getGuestid());
         bookingHistory.setNumber_of_rooms( bookingHistory.getNumber_of_rooms()-number_of_rooms );
 
-        bookingHistory.setPrice( 0 );
-        Date start = bookingHistory.getDate_reservation();
-        Date end = bookingHistory.getDue_date();
-        Calendar cStart = Calendar.getInstance();
-        cStart.setTime( start );
-        cStart.add( Calendar.DAY_OF_MONTH,-1 );
-        Calendar cEnd = Calendar.getInstance();
-        cEnd.setTime( end );
-        RoomType roomType = roomTypeRepo.findByHotelidAndName( bookingHistory.getHotelid(), bookingHistory.getRoomtype() );
-        while(cStart.before( cEnd )) {
-            if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_mon() );
-            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.TUESDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_tue() );
-            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.WEDNESDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_wed() );
-            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.THURSDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_thu() );
-            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_fri() );
-            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_sat() );
-            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_sun() );
-            cStart.add(Calendar.DAY_OF_MONTH, 1);
-        }
-        cStart.setTime( start );
-        cStart.add( Calendar.DAY_OF_MONTH,-1 );
-        List<HotelSeasons> hotelSeasons = hotelSeasonsRepo.findByHotelid( bookingHistory.getHotelid() );
-        while (cStart.before( cEnd )) {
-            for(HotelSeasons hotelseason : hotelSeasons ) {
-                Seasons season = seasonsRepo.findSeasonsByName( hotelseason.getSeason() );
-                if(cStart.getTime().getTime() >= season.getStart_date().getTime() &&
-                        cStart.getTime().getTime() <= season.getEnd_date().getTime()) {
-                    bookingHistory.setPrice( bookingHistory.getPrice()+hotelseason.getAdd_price() );
-                    break;
-                }
-            }
-            cStart.add(Calendar.DAY_OF_MONTH, 1);
-        }
-        bookingHistory.setPrice( bookingHistory.getPrice()*bookingHistory.getNumber_of_rooms());
+        bookingHistory.setPrice( bookingHistory.getNumber_of_rooms()*price( bookingHistory.getDate_reservation(), bookingHistory.getDue_date(), bookingHistory.getRoomtype(), bookingHistory.getHotelid() ) );
         bookingHistoryRepo.save(bookingHistory);
 
-        List<OccupationHistory> occupationHistoryList = occupationHistoryRepo.findByHotelidAndRoomtype( bh_id, room_type );
+        List<OccupationHistory> occupationHistoryList = occupationHistoryRepo.findByBookingidAndRoomtype( bh_id, room_type );
         for(int i = 0; i < number_of_rooms; i++) {
             occupationHistoryRepo.delete( occupationHistoryList.get( 0 ) );
             occupationHistoryList.remove( 0 );
@@ -169,68 +146,75 @@ public class EmployeeRest {
         return ResponseEntity.ok().body(bookingHistory);
     }
 
-    @PostMapping("/deskclerk/changebooking")
-    public ResponseEntity<BookingHistory> changeBooking(@Validated @RequestBody BookingHistory bookingHistory) {
-        String prevroomtype = bookingHistoryRepo.findByBookingid( bookingHistory.getBookingid() ).getRoomtype();
+    int price(Date s, Date e,String roomtypename, Long hotelid) {
+        int price = 0;
+        Date start = s;
+        Date end = e;
+        Calendar cStart = Calendar.getInstance();
+        cStart.setTime( start );
+        Calendar cEnd = Calendar.getInstance();
+        cEnd.setTime( end );
+        cEnd.add( Calendar.DAY_OF_MONTH,1 );
+        RoomType roomType = roomTypeRepo.findByHotelidAndName( hotelid, roomtypename );
+        while(cStart.before( cEnd )) {
+            if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY)
+                price += roomType.getBase_price_mon() ;
+            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.TUESDAY)
+                price += roomType.getBase_price_tue() ;
+            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.WEDNESDAY)
+                price += roomType.getBase_price_wed() ;
+            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.THURSDAY)
+                price += roomType.getBase_price_thu() ;
+            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY)
+                price += roomType.getBase_price_fri() ;
+            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
+                price += roomType.getBase_price_sat() ;
+            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
+                price += roomType.getBase_price_sun() ;
+            cStart.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        cStart.setTime( start );
+
+        List<HotelSeasons> hotelSeasons = hotelSeasonsRepo.findByHotelid( hotelid );
+        while(start.before( end ) || start.equals( end )) {
+            for(HotelSeasons hotelseason : hotelSeasons) {
+                Seasons season = seasonsRepo.findSeasonsByName( hotelseason.getSeason() );
+                Filter filter = new Filter();
+                if(filter.overlaps( new DateInterval( start, start ),  new DateInterval( season.getStart_date(), season.getEnd_date() )))
+                    price += hotelseason.getAdd_price();
+            }
+            start = new Date(start.getTime() + (1000 * 60 * 60 * 24));
+        }
+        return price;
+    }
+
+    @PostMapping("/changebooking/{prevroomtype}")
+    public ResponseEntity<BookingHistory> changeBooking(@Validated @RequestBody BookingHistory bookingHistory, @PathVariable("prevroomtype") String prevroomtype) {
+//        String prevroomtype = bookingHistoryRepo.findByBookingid( bookingHistory.getBookingid() ).getRoomtype();
 
         bookingHistory.setPrice( 0 );
         Date start = bookingHistory.getDate_reservation();
         Date end = bookingHistory.getDue_date();
         Calendar cStart = Calendar.getInstance();
-        cStart.setTime( start );
-        cStart.add( Calendar.DAY_OF_MONTH,-1 );
         Calendar cEnd = Calendar.getInstance();
-        cEnd.setTime( end );
-        RoomType roomType = roomTypeRepo.findByHotelidAndName( bookingHistory.getHotelid(), bookingHistory.getRoomtype() );
-        while(cStart.before( cEnd )) {
-            if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_mon() );
-            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.TUESDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_tue() );
-            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.WEDNESDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_wed() );
-            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.THURSDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_thu() );
-            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_fri() );
-            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_sat() );
-            else if (cStart.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
-                bookingHistory.setPrice( bookingHistory.getPrice() + roomType.getBase_price_sun() );
-            cStart.add(Calendar.DAY_OF_MONTH, 1);
-        }
-        cStart.setTime( start );
-        cStart.add( Calendar.DAY_OF_MONTH,-1 );
-        List<HotelSeasons> hotelSeasons = hotelSeasonsRepo.findByHotelid( bookingHistory.getHotelid() );
-        while (cStart.before( cEnd )) {
-            for(HotelSeasons hotelseason : hotelSeasons ) {
-                Seasons season = seasonsRepo.findSeasonsByName( hotelseason.getSeason() );
-                if(cStart.getTime().getTime() >= season.getStart_date().getTime() &&
-                        cStart.getTime().getTime() <= season.getEnd_date().getTime()) {
-                    bookingHistory.setPrice( bookingHistory.getPrice()+hotelseason.getAdd_price() );
-                    break;
-                }
-            }
-            cStart.add(Calendar.DAY_OF_MONTH, 1);
-        }
-        bookingHistory.setPrice( bookingHistory.getPrice()*bookingHistory.getNumber_of_rooms());
+        bookingHistory.setPrice( bookingHistory.getNumber_of_rooms()*price( bookingHistory.getDate_reservation(), bookingHistory.getDue_date(), bookingHistory.getRoomtype(), bookingHistory.getHotelid() ) );
         bookingHistoryRepo.save(bookingHistory);
+
         List<GuestUsesService> guestUsesService = guestUsesServiceRepo.findByBookingid( bookingHistory.getBookingid() );
         for (GuestUsesService guestUsesService1 : guestUsesService) {
-            guestUsesService1.setRoom_type( bookingHistory.getRoomtype() )
-            ; guestUsesServiceRepo.save( guestUsesService1 );
-        }
-        bookingHistoryRepo.delete( bookingHistoryRepo.findByBookingidAndRoomtype( bookingHistory.getBookingid(), prevroomtype ) );
-
+            guestUsesServiceRepo.delete( guestUsesService1 );
+            guestUsesService1.setRoom_type( bookingHistory.getRoomtype() );
+            guestUsesServiceRepo.save( guestUsesService1 );
+        } //works
 
         List<OccupationHistory> occupationHistory = occupationHistoryRepo.findByBookingidAndRoomtype( bookingHistory.getBookingid(), prevroomtype );
-
         cStart.setTime( start );
-        cStart.add( Calendar.DAY_OF_MONTH,-1 );
+        cEnd.add( Calendar.DAY_OF_MONTH,1 );
         for (OccupationHistory oh : occupationHistory) {
             oh.setTo_date( cStart.getTime() );
             occupationHistoryRepo.save( oh );
         }
+
 
         // creating new occupationhistory
         // frontend stores available room numbers and booking history record
@@ -239,7 +223,7 @@ public class EmployeeRest {
         return ResponseEntity.ok().body(bookingHistory);
     }
 
-    @PostMapping("/deskclerk/filterbyroomtype")
+    @PostMapping("/filterbyroomtype")
     public List<Integer> filter(@Validated @RequestBody BookingHistory bookingHistory) {
         List<Integer> resultList = new ArrayList<>();
         List<Room> roomList = roomRepo.findByHotelidAndRoomtype( bookingHistory.getHotelid(), bookingHistory.getRoomtype() );
@@ -258,9 +242,9 @@ public class EmployeeRest {
         return resultList;
     }
 
-    @PutMapping("/deskclerk/changeroom/{bh_id}/{room_num}") //change room
-    public ResponseEntity changeRoom(@PathVariable(value = "bh_id") Long bh_id, @PathVariable(value = "room_num") Integer room_num) {
-        BookingHistory bookingHistory = bookingHistoryRepo.findByBookingid( bh_id );
+    @PutMapping("/changeroom/{bh_id}/{roomtype}/{room_num}") //change room
+    public ResponseEntity changeRoom(@PathVariable(value = "bh_id") Long bh_id, @PathVariable(value = "room_num") Integer room_num, @PathVariable(value = "roomtype") String roomtype) {
+        BookingHistory bookingHistory = bookingHistoryRepo.findByBookingidAndRoomtype( bh_id, roomtype );
 
         List<Integer> availableRoomList = filter( bookingHistory );
         if(availableRoomList.size() == 0)
@@ -276,14 +260,25 @@ public class EmployeeRest {
             Date lastCleaned = roomRepo.findByHotelidAndRoomnumber( bookingHistory.getHotelid(), r ).getLastcleaned();
 
             List<OccupationHistory> occupationHistoryList = occupationHistoryRepo.findByHotelidAndRoomnumber( bookingHistory.getHotelid(), r );
+            if(occupationHistoryList.size() == 0) {
+                OccupationHistory occupationHistory = occupationHistoryRepo.findByRoomnumberAndBookingid( room_num, bh_id );
+                occupationHistoryRepo.delete( occupationHistory );
+                occupationHistory.setRoomnumber( r );
+                occupationHistoryRepo.save( occupationHistory );
+                return ResponseEntity.ok().body(occupationHistory);
+            }
+
+
             List<Date> dateList = new ArrayList<>();
             for(OccupationHistory occupationHistory : occupationHistoryList)
                 dateList.add( occupationHistory.getTo_date() );
             Collections.sort( dateList );
 
+
             if(lastCleaned.after( dateList.get( dateList.size()-1 ) ) || lastCleaned.equals( dateList.get( dateList.size()-1 ) )) {
                 List<OccupationHistory> occupationHistoryList1 = occupationHistoryRepo.findAll();
                 OccupationHistory occupationHistory = occupationHistoryRepo.findByRoomnumberAndBookingid( room_num, bh_id );
+                occupationHistoryRepo.delete( occupationHistory );
                 occupationHistory.setRoomnumber( r );
                 occupationHistoryRepo.save( occupationHistory );
                 return ResponseEntity.ok().body(occupationHistory);
@@ -300,12 +295,12 @@ public class EmployeeRest {
         return "Email sent successfully";
     }
 
-    @GetMapping("/manager/getallseasons/{hotelid}")
+    @GetMapping("/getallseasons/{hotelid}")
     public List<HotelSeasons> getAllSeasons(@PathVariable("hotelid") Long hotelid) {
         return hotelSeasonsRepo.findByHotelid( hotelid );
     }
 
-    @PostMapping("/manager/addseason")
+    @PostMapping("/addseason")
     public ResponseEntity addSeason(@Validated @RequestBody HotelSeasons hotelSeasons) {
         List<HotelSeasons> hotelSeasonsList = hotelSeasonsRepo.findByHotelid( hotelSeasons.getHotelid() );
         System.out.println(hotelSeasons.getSeason());
@@ -325,7 +320,7 @@ public class EmployeeRest {
         return ResponseEntity.ok().body("cannot add!!!!");
     }
 
-    @DeleteMapping("/manager/deleteseason/{name}")
+    @DeleteMapping("/deleteseason/{name}")
     public ResponseEntity deleteSeason(@PathVariable("name") String name) {
         HotelSeasons hotelSeasons = hotelSeasonsRepo.findBySeason( name );
         hotelSeasonsRepo.delete( hotelSeasons );
@@ -372,6 +367,86 @@ public class EmployeeRest {
         //multipart.addBodyPart(attachPart);
         msg.setContent(multipart);
         Transport.send(msg);
+    }
+
+    //    @GetMapping("/manager/getscheduleforall/{hotel_id}")
+    @GetMapping("/getscheduleforall/{hotel_id}")
+    public ResponseEntity getScheduleForAll(@PathVariable(value = "hotel_id") Long hotel_id) throws JsonProcessingException {
+        List<Schedule> schedules = scheduleRepo.findByHotelid(hotel_id);
+        HashMap<Long, ScheduleInfo> empSchMap = new HashMap<Long, ScheduleInfo>();
+        for( Schedule s : schedules )
+        {
+            Employee emp = employeeRepo.findByHotelidAndEmployeeid(hotel_id,s.getEmployeeid());
+            ScheduleInfo info = new ScheduleInfo(s.getEmployeeid(), emp.getFirst_name(), emp.getLast_name(), emp.getJob_title(), emp.paymentperhour, s.getDate(), s.getStarttime(), s.getEndtime());
+            empSchMap.put(s.getEmployeeid(), info);
+        }
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        return new ResponseEntity(ow.writeValueAsString(empSchMap), HttpStatus.OK);
+    }
+
+    //    @PutMapping("/manager/changepayroll/{hotel_id}/{emp_id}/{new_pay}")
+    @PutMapping("/changepayroll/{hotel_id}/{emp_id}/{new_pay}")
+    public ResponseEntity<Employee> changePayroll(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id, @PathVariable(value = "new_pay") int new_pay) {
+        Employee employee = employeeRepo.findByHotelidAndEmployeeid(hotel_id, emp_id);
+        employee.setPayment_per_hour(new_pay);
+        employeeRepo.save( employee );
+        return ResponseEntity.ok().body(employee);
+    }
+
+    @DeleteMapping("/schedule/{hotel_id}/{emp_id}/{date}")
+    public String deleteWorkDay(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id, @PathVariable(value = "date") @DateTimeFormat(pattern="yyyy-MM-dd") Date date)
+    {
+        Schedule schedule = scheduleRepo.findByHotelidAndEmployeeidAndDate(hotel_id, emp_id, date);
+        scheduleRepo.delete(schedule);
+        return "deleted";
+    }
+
+    @PutMapping("/scheduleStart/{hotel_id}/{emp_id}/{date}/{time}")
+    public ResponseEntity<Schedule> changeStartTime(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id,
+                                                    @PathVariable(value = "date") @DateTimeFormat(pattern="yyyy-MM-dd") Date date,
+                                                    @PathVariable(value = "time") String time) throws ParseException {
+//        DateFormat formatterDate = new SimpleDateFormat("yyyy-MM-dd");
+        DateFormat formatterTime = new SimpleDateFormat("HH:mm:ss");
+
+        Schedule schedule = scheduleRepo.findByHotelidAndEmployeeidAndDate(hotel_id, emp_id, date);
+        Timestamp timeStamp = new Timestamp((formatterTime.parse(time)).getTime());
+        schedule.setStarttime(timeStamp);
+        scheduleRepo.save(schedule);
+        return ResponseEntity.ok().body(schedule);
+    }
+
+    @PutMapping("/scheduleEnd/{hotel_id}/{emp_id}/{date}/{time}")
+    public ResponseEntity<Schedule> changeEndTime(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id,
+                                                  @PathVariable(value = "date") @DateTimeFormat(pattern="yyyy-MM-dd") Date date,
+                                                  @PathVariable(value = "time") String time) throws ParseException {
+//        DateFormat formatterDate = new SimpleDateFormat("yyyy-MM-dd");
+        DateFormat formatterTime = new SimpleDateFormat("HH:mm:ss");
+
+        Schedule schedule = scheduleRepo.findByHotelidAndEmployeeidAndDate(hotel_id, emp_id, date);
+        Timestamp timeStamp = new Timestamp((formatterTime.parse(time)).getTime());
+        schedule.setEndtime(timeStamp);
+        scheduleRepo.save(schedule);
+        return ResponseEntity.ok().body(schedule);
+    }
+
+    @PostMapping("/addschedule/{hotel_id}/{emp_id}/{date}/{starttime}/{endtime}")
+    public ResponseEntity<Schedule> addSchedule(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id,
+                                                @PathVariable(value = "date") @DateTimeFormat(pattern="yyyy-MM-dd") Date date,
+                                                @PathVariable(value = "starttime") String starttime,
+                                                @PathVariable(value = "endtime") String endtime) throws ParseException {
+        DateFormat formatterTime = new SimpleDateFormat("HH:mm:ss");
+        Timestamp startStamp = new Timestamp((formatterTime.parse(starttime)).getTime());
+        Timestamp endStamp = new Timestamp((formatterTime.parse(endtime)).getTime());
+
+        Schedule schedule = new Schedule();
+
+        schedule.setHotelid(hotel_id);
+        schedule.setEmployeeid(emp_id);
+        schedule.setDate(date);
+        schedule.setStarttime(startStamp);
+        schedule.setEndtime(endStamp);
+        scheduleRepo.save(schedule);
+        return ResponseEntity.ok().body(schedule);
     }
 
 
