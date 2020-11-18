@@ -43,6 +43,8 @@ public class EmployeeRest {
     @Autowired
     private EmployeeRepo employeeRepo;
     @Autowired
+    private HotelDiscountsRepo hotelDiscountsRepo;
+    @Autowired
     private UserService userService;
     @Autowired
     private JwtProvider jwtProvider;
@@ -116,11 +118,14 @@ public class EmployeeRest {
     @PutMapping("/changestatusbh/{bh_id}/{roomtype}/{status}") //works
     public ResponseEntity<BookingHistory> changeStatus(@PathVariable(value = "bh_id") Long bh_id, @PathVariable(value = "status") String status, @PathVariable(value = "roomtype") String roomtype) {
         BookingHistory bookingHistory = bookingHistoryRepo.findByBookingidAndRoomtype( bh_id, roomtype );
-        if(status.equals( "past" )) {
-
+        if(status.equals( "Paid" )) {
             Long guestid = bookingHistory.getGuestid();
             Guest guest = userRepo.findByUserId( guestid );
-            guest.setPrice( guest.getPrice() +  bookingHistory.getPrice() + bookingHistory.getService_price());
+            int price = bookingHistory.getPrice() + bookingHistory.getService_price();
+            int discount = hotelDiscountsRepo.findByHotelidAndCategory( bookingHistory.getHotelid(), bookingHistory.getCategory() ).getDiscount();
+            price -= (price*discount/100);
+            bookingHistory.setPrice( price );
+            guest.setPrice( guest.getPrice() +  price);
             userRepo.save( guest );
         }
         bookingHistory.setStatus( status );
@@ -200,16 +205,19 @@ public class EmployeeRest {
         bookingHistory.setPrice( bookingHistory.getNumber_of_rooms()*price( bookingHistory.getDate_reservation(), bookingHistory.getDue_date(), bookingHistory.getRoomtype(), bookingHistory.getHotelid() ) );
         bookingHistoryRepo.save(bookingHistory);
 
-        List<GuestUsesService> guestUsesService = guestUsesServiceRepo.findByBookingid( bookingHistory.getBookingid() );
-        for (GuestUsesService guestUsesService1 : guestUsesService) {
-            guestUsesServiceRepo.delete( guestUsesService1 );
-            guestUsesService1.setRoom_type( bookingHistory.getRoomtype() );
-            guestUsesServiceRepo.save( guestUsesService1 );
-        } //works
+        if(prevroomtype.equals( "none" ))
+            return ResponseEntity.ok().body(bookingHistory);
+
+//        List<GuestUsesService> guestUsesService = guestUsesServiceRepo.findByBookingid( bookingHistory.getBookingid() );
+//        for (GuestUsesService guestUsesService1 : guestUsesService) {
+//            guestUsesServiceRepo.delete( guestUsesService1 );
+//            guestUsesService1.setRoom_type( bookingHistory.getRoomtype() );
+//            guestUsesServiceRepo.save( guestUsesService1 );
+//        } //works
 
         List<OccupationHistory> occupationHistory = occupationHistoryRepo.findByBookingidAndRoomtype( bookingHistory.getBookingid(), prevroomtype );
         cStart.setTime( start );
-        cEnd.add( Calendar.DAY_OF_MONTH,1 );
+        cStart.add( Calendar.DAY_OF_MONTH,-1 );
         for (OccupationHistory oh : occupationHistory) {
             oh.setTo_date( cStart.getTime() );
             occupationHistoryRepo.save( oh );
@@ -298,6 +306,11 @@ public class EmployeeRest {
     @GetMapping("/getallseasons/{hotelid}")
     public List<HotelSeasons> getAllSeasons(@PathVariable("hotelid") Long hotelid) {
         return hotelSeasonsRepo.findByHotelid( hotelid );
+    }
+
+    @GetMapping("/getallseasons")
+    public List<Seasons> getAllSeasons() {
+        return seasonsRepo.findAll();
     }
 
     @PostMapping("/addseason")

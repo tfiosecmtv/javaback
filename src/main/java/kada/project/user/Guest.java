@@ -65,6 +65,7 @@ public class Guest {
         this.lastName = lastName;
     }
 
+
     @Column(name = "home")
     public String getHome() {
         return home;

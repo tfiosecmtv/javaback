@@ -4,7 +4,6 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 //import java.time.LocalDate;
-
 class BookingHistoryId implements Serializable {
     Long hotelid;
     Long guestid;
@@ -83,6 +82,15 @@ public class BookingHistory {
     Integer price;
     @Column(name = "service_price")
     Integer serviceprice;
+    @Column(name = "category")
+    String category;
+    public String getCategory() {
+        return category;
+    }
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
 
     public BookingHistory(Long hotelid, Long guestid, Long bookingid, String roomtype, String status, Date date_reservation, Date due_date, Integer number_of_rooms, Integer price, Integer serviceprice) {
         this.hotelid = hotelid;

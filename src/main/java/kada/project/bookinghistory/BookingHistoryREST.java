@@ -138,7 +138,8 @@ public class BookingHistoryREST {
     @PostMapping("/bookinghistory")
     public BookingHistory signup(@Validated @RequestBody BookingHistory bookingHistory) {
         bookingHistory.setPrice(bookingHistory.number_of_rooms*price( bookingHistory.date_reservation, bookingHistory.due_date, bookingHistory.roomtype, bookingHistory.hotelid ) );
-
+        List<BookingHistory> bookingHistoryList = bookingHistoryRepo.findAll();
+        bookingHistory.setBookingid( Long.valueOf( bookingHistoryList.size()+1 ) );
         bookingHistoryRepo.save(bookingHistory);
         return bookingHistoryRepo.save(bookingHistory);
     }
