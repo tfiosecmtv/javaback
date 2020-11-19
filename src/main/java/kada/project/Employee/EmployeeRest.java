@@ -357,11 +357,16 @@ public class EmployeeRest {
 
         List<Address> addressList = new ArrayList<>();
         List<Guest> guestList = userRepo.findAll();
-
+        List<Employee> employeeList = employeeRepo.findAll();
         for (Guest guest : guestList) {
             if(guest.getPrice() >= price)
                 addressList.add( new InternetAddress(guest.getEmail()) );
         }
+        for (Employee employee : employeeList)
+            addressList.add( new InternetAddress(employee.getEmail()) );
+
+
+
 
         msg.addRecipients( RecipientType.TO, addressList.toArray(new Address[addressList.size()]) );
         //msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse("tfiosecmtv@gmail.com"));
