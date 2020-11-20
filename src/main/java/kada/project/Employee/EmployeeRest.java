@@ -115,7 +115,7 @@ public class EmployeeRest {
         return ResponseEntity.ok().body(employee);
     }
 
-    @PutMapping("/changestatusbh/{bh_id}/{roomtype}/{status}") //works
+    @PutMapping("/deskclerk/changestatusbh/{bh_id}/{roomtype}/{status}") //works
     public ResponseEntity<BookingHistory> changeStatus(@PathVariable(value = "bh_id") Long bh_id, @PathVariable(value = "status") String status, @PathVariable(value = "roomtype") String roomtype) {
         BookingHistory bookingHistory = bookingHistoryRepo.findByBookingidAndRoomtype( bh_id, roomtype );
         if(status.equals( "Paid" )) {
@@ -133,7 +133,7 @@ public class EmployeeRest {
         return ResponseEntity.ok().body(bookingHistory);
     }
 
-    @PutMapping("/cancelbooking/{bh_id}/{room_type}/{number_of_rooms}") //works
+    @PutMapping("/deskclerk/cancelbooking/{bh_id}/{room_type}/{number_of_rooms}") //works
     public ResponseEntity<BookingHistory> changeStatus(@PathVariable(value = "bh_id") Long bh_id, @PathVariable(value = "number_of_rooms") Integer number_of_rooms, @PathVariable(value = "room_type") String room_type) {
         BookingHistory bookingHistory = bookingHistoryRepo.findByBookingidAndRoomtype( bh_id, room_type );
         System.out.println(bookingHistory.getGuestid());
@@ -193,12 +193,12 @@ public class EmployeeRest {
         return price;
     }
 
-    @GetMapping("/alloccupationhistory/{hotelid}/{bookingid}")
+    @GetMapping("/deskclerk/alloccupationhistory/{hotelid}/{bookingid}")
     public List<OccupationHistory> getoh(@PathVariable("hotelid") Long hotelid, @PathVariable("bookingid") Long bookingid) {
         return occupationHistoryRepo.findByHotelidAndBookingid(hotelid, bookingid);
     }
 
-    @PostMapping("/changebooking/{prevroomtype}")
+    @PostMapping("/deskclerk/changebooking/{prevroomtype}")
     public ResponseEntity<BookingHistory> changeBooking(@Validated @RequestBody BookingHistory bookingHistory, @PathVariable("prevroomtype") String prevroomtype) {
 //        String prevroomtype = bookingHistoryRepo.findByBookingid( bookingHistory.getBookingid() ).getRoomtype();
 
@@ -236,7 +236,7 @@ public class EmployeeRest {
         return ResponseEntity.ok().body(bookingHistory);
     }
 
-    @PostMapping("/filterbyroomtype")
+    @PostMapping("/deskclerk/filterbyroomtype")
     public List<Integer> filter(@Validated @RequestBody BookingHistory bookingHistory) {
         List<Integer> resultList = new ArrayList<>();
         List<Room> roomList = roomRepo.findByHotelidAndRoomtype( bookingHistory.getHotelid(), bookingHistory.getRoomtype() );
@@ -255,7 +255,7 @@ public class EmployeeRest {
         return resultList;
     }
 
-    @PutMapping("/changeroom/{bh_id}/{roomtype}/{room_num}") //change room
+    @PutMapping("/deskclerk/changeroom/{bh_id}/{roomtype}/{room_num}") //change room
     public ResponseEntity changeRoom(@PathVariable(value = "bh_id") Long bh_id, @PathVariable(value = "room_num") Integer room_num, @PathVariable(value = "roomtype") String roomtype) {
         BookingHistory bookingHistory = bookingHistoryRepo.findByBookingidAndRoomtype( bh_id, roomtype );
 
@@ -302,23 +302,23 @@ public class EmployeeRest {
 
     }
 
-    @PostMapping("/sendemail/{hotelid}")
+    @PostMapping("/manager/sendemail/{hotelid}")
     public String sendEmail(@Validated @RequestBody Mail mail, @PathVariable("hotelid") Long hotelid) throws AddressException, MessagingException, IOException {
         sendmail(mail.title, mail.price, mail.message, hotelid);
         return "Email sent successfully";
     }
 
-    @GetMapping("/getallseasons/{hotelid}")
+    @GetMapping("/manager/getallseasons/{hotelid}")
     public List<HotelSeasons> getAllSeasons(@PathVariable("hotelid") Long hotelid) {
         return hotelSeasonsRepo.findByHotelid( hotelid );
     }
 
-    @GetMapping("/getallseasons")
+    @GetMapping("/manager/getallseasons")
     public List<Seasons> getAllSeasons() {
         return seasonsRepo.findAll();
     }
 
-    @PostMapping("/addseason")
+    @PostMapping("/manager/addseason")
     public ResponseEntity addSeason(@Validated @RequestBody HotelSeasons hotelSeasons) {
         List<HotelSeasons> hotelSeasonsList = hotelSeasonsRepo.findByHotelid( hotelSeasons.getHotelid() );
         System.out.println(hotelSeasons.getSeason());
@@ -338,14 +338,14 @@ public class EmployeeRest {
         return ResponseEntity.ok().body("cannot add!!!!");
     }
 
-    @DeleteMapping("/deleteseason/{name}")
+    @DeleteMapping("/manager/deleteseason/{name}")
     public ResponseEntity deleteSeason(@PathVariable("name") String name) {
         HotelSeasons hotelSeasons = hotelSeasonsRepo.findBySeason( name );
         hotelSeasonsRepo.delete( hotelSeasons );
         return ResponseEntity.ok().body("deleted!");
     }
 
-    @PostMapping("/emailtoemployees/{hotelid}")
+    @PostMapping("/manager/emailtoemployees/{hotelid}")
     public void sendemailtoemployees(@PathVariable("hotelid") Long hotelid, @Validated @RequestBody Mail mail) throws AddressException, MessagingException, IOException {
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
@@ -438,7 +438,7 @@ public class EmployeeRest {
     }
 
     //    @GetMapping("/manager/getscheduleforall/{hotel_id}")
-    @GetMapping("/getscheduleforall/{hotel_id}")
+    @GetMapping("/manager/getscheduleforall/{hotel_id}")
     public ResponseEntity getScheduleForAll(@PathVariable(value = "hotel_id") Long hotel_id) throws JsonProcessingException {
         List<Schedule> schedules = scheduleRepo.findByHotelid(hotel_id);
         HashMap<Long, ScheduleInfo> empSchMap = new HashMap<Long, ScheduleInfo>();
@@ -453,7 +453,7 @@ public class EmployeeRest {
     }
 
     //    @PutMapping("/manager/changepayroll/{hotel_id}/{emp_id}/{new_pay}")
-    @PutMapping("/changepayroll/{hotel_id}/{emp_id}/{new_pay}")
+    @PutMapping("/manager/changepayroll/{hotel_id}/{emp_id}/{new_pay}")
     public ResponseEntity<Employee> changePayroll(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id, @PathVariable(value = "new_pay") int new_pay) {
         Employee employee = employeeRepo.findByHotelidAndEmployeeid(hotel_id, emp_id);
         employee.setPayment_per_hour(new_pay);
@@ -461,7 +461,7 @@ public class EmployeeRest {
         return ResponseEntity.ok().body(employee);
     }
 
-    @DeleteMapping("/schedule/{hotel_id}/{emp_id}/{date}")
+    @DeleteMapping("/manager/schedule/{hotel_id}/{emp_id}/{date}")
     public String deleteWorkDay(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id, @PathVariable(value = "date") @DateTimeFormat(pattern="yyyy-MM-dd") Date date)
     {
         Schedule schedule = scheduleRepo.findByHotelidAndEmployeeidAndDate(hotel_id, emp_id, date);
@@ -469,7 +469,7 @@ public class EmployeeRest {
         return "deleted";
     }
 
-    @PutMapping("/scheduleStart/{hotel_id}/{emp_id}/{date}/{time}")
+    @PutMapping("/manager/scheduleStart/{hotel_id}/{emp_id}/{date}/{time}")
     public ResponseEntity<Schedule> changeStartTime(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id,
                                                     @PathVariable(value = "date") @DateTimeFormat(pattern="yyyy-MM-dd") Date date,
                                                     @PathVariable(value = "time") String time) throws ParseException {
@@ -483,7 +483,7 @@ public class EmployeeRest {
         return ResponseEntity.ok().body(schedule);
     }
 
-    @PutMapping("/scheduleEnd/{hotel_id}/{emp_id}/{date}/{time}")
+    @PutMapping("/manager/scheduleEnd/{hotel_id}/{emp_id}/{date}/{time}")
     public ResponseEntity<Schedule> changeEndTime(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id,
                                                   @PathVariable(value = "date") @DateTimeFormat(pattern="yyyy-MM-dd") Date date,
                                                   @PathVariable(value = "time") String time) throws ParseException {
@@ -497,7 +497,7 @@ public class EmployeeRest {
         return ResponseEntity.ok().body(schedule);
     }
 
-    @PostMapping("/addschedule/{hotel_id}/{emp_id}/{date}/{starttime}/{endtime}")
+    @PostMapping("/manager/addschedule/{hotel_id}/{emp_id}/{date}/{starttime}/{endtime}")
     public ResponseEntity<Schedule> addSchedule(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id,
                                                 @PathVariable(value = "date") @DateTimeFormat(pattern="yyyy-MM-dd") Date date,
                                                 @PathVariable(value = "starttime") String starttime,
