@@ -136,7 +136,14 @@ public class HotelRest {
                 }
                 if(roomnumberlist.size() != 0) {
                     int price = price( hotelFilter, roomType.getName(), hotelEntity.getHotel_id() );
-                    RoomTypeInfo roomTypeInfo = new RoomTypeInfo( roomType.getName(), roomType.getSize(), roomType.getCapacity(), roomnumberlist.size(), price, roomnumberlist );
+                    String rooms = "";
+                    for(Integer i : roomnumberlist) {
+                        rooms += i.toString() + " ";
+                        System.out.println(rooms);
+                    }
+
+
+                    RoomTypeInfo roomTypeInfo = new RoomTypeInfo( roomType.getName(), roomType.getSize(), roomType.getCapacity(), roomnumberlist.size(), price, rooms );
                     hotelFilterResult.roomTypeInfoList.add(roomTypeInfo);
                 }
 

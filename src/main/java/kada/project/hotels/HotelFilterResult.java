@@ -34,21 +34,22 @@ public class HotelFilterResult {
     }
 }
 
+
 class RoomTypeInfo {
     public String type;
     public Float size;
     public Integer capacity;
     public Integer howmanyavailable;
     public Integer price;
-    List<Integer> roomnumbers;
+    public String roomnums;
 
-    RoomTypeInfo(String type, Float size, Integer capacity, Integer howmanyavailable, Integer price, List<Integer> roomnumbers) {
+    RoomTypeInfo(String type, Float size, Integer capacity, Integer howmanyavailable, Integer price, String roomnums) {
         this.type = type;
         this.size = size;
         this.capacity = capacity;
         this.howmanyavailable = howmanyavailable;
         this.price = price;
-        this.roomnumbers = roomnumbers;
+        this.roomnums = roomnums;
     }
 
     RoomTypeInfo getRoomTypeInfo() {

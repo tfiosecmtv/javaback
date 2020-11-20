@@ -193,6 +193,11 @@ public class EmployeeRest {
         return price;
     }
 
+    @GetMapping("/alloccupationhistory/{hotelid}/{bookingid}")
+    public List<OccupationHistory> getoh(@PathVariable("hotelid") Long hotelid, @PathVariable("bookingid") Long bookingid) {
+        return occupationHistoryRepo.findByHotelidAndBookingid(hotelid, bookingid);
+    }
+
     @PostMapping("/changebooking/{prevroomtype}")
     public ResponseEntity<BookingHistory> changeBooking(@Validated @RequestBody BookingHistory bookingHistory, @PathVariable("prevroomtype") String prevroomtype) {
 //        String prevroomtype = bookingHistoryRepo.findByBookingid( bookingHistory.getBookingid() ).getRoomtype();
@@ -297,9 +302,9 @@ public class EmployeeRest {
 
     }
 
-    @PostMapping("/sendemail")
-    public String sendEmail(@Validated @RequestBody Mail mail) throws AddressException, MessagingException, IOException {
-        sendmail(mail.title, mail.price, mail.message);
+    @PostMapping("/sendemail/{hotelid}")
+    public String sendEmail(@Validated @RequestBody Mail mail, @PathVariable("hotelid") Long hotelid) throws AddressException, MessagingException, IOException {
+        sendmail(mail.title, mail.price, mail.message, hotelid);
         return "Email sent successfully";
     }
 
@@ -340,7 +345,8 @@ public class EmployeeRest {
         return ResponseEntity.ok().body("deleted!");
     }
 
-    private void sendmail(String title, Integer price, String message) throws AddressException, MessagingException, IOException {
+    @PostMapping("/emailtoemployees/{hotelid}")
+    public void sendemailtoemployees(@PathVariable("hotelid") Long hotelid, @Validated @RequestBody Mail mail) throws AddressException, MessagingException, IOException {
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
@@ -356,8 +362,52 @@ public class EmployeeRest {
         msg.setFrom(new InternetAddress("kadahotelchain@gmail.com", false));
 
         List<Address> addressList = new ArrayList<>();
-        List<Guest> guestList = userRepo.findAll();
-        List<Employee> employeeList = employeeRepo.findAll();
+        List<Employee> employeeList = employeeRepo.findByHotelid(hotelid);
+        for (Employee employee : employeeList)
+            addressList.add( new InternetAddress(employee.getEmail()) );
+
+        msg.addRecipients( RecipientType.TO, addressList.toArray(new Address[addressList.size()]) );
+        //msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse("tfiosecmtv@gmail.com"));
+        msg.setSubject(mail.title);
+        msg.setContent(mail.message, "text/html");
+        msg.setSentDate(new Date());
+
+        MimeBodyPart messageBodyPart = new MimeBodyPart();
+        messageBodyPart.setContent(mail.message, "text/html");
+
+        Multipart multipart = new MimeMultipart();
+        multipart.addBodyPart(messageBodyPart);
+        MimeBodyPart attachPart = new MimeBodyPart();
+
+        //attachPart.attachFile("/var/tmp/image19.png");
+        //multipart.addBodyPart(attachPart);
+        msg.setContent(multipart);
+        Transport.send(msg);
+    }
+
+    private void sendmail(String title, Integer price, String message, Long hotelid) throws AddressException, MessagingException, IOException {
+        Properties props = new Properties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.host", "smtp.gmail.com");
+        props.put("mail.smtp.port", "587");
+
+        Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication("kadahotelchain@gmail.com", "KADAhotel123");
+            }
+        });
+        Message msg = new MimeMessage(session);
+        msg.setFrom(new InternetAddress("kadahotelchain@gmail.com", false));
+
+        List<Address> addressList = new ArrayList<>();
+        List<BookingHistory> bhlist = bookingHistoryRepo.findByHotelid(hotelid);
+        Set<Guest> guestList = new HashSet<>();
+        for(BookingHistory bookingHistory : bhlist) {
+            Guest guest = userRepo.findByUserId( bookingHistory.getGuestid() );
+            guestList.add( guest );
+        }
+        List<Employee> employeeList = employeeRepo.findByHotelid(hotelid);
         for (Guest guest : guestList) {
             if(guest.getPrice() >= price)
                 addressList.add( new InternetAddress(guest.getEmail()) );
