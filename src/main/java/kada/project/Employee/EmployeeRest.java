@@ -469,6 +469,20 @@ public class EmployeeRest {
         return "deleted";
     }
 
+    @DeleteMapping("/deletebooking")
+    public String deletebooking(@Validated @RequestBody BookingHistory bh) {
+        List<OccupationHistory> occupationHistoryList = occupationHistoryRepo.findByBookingid( bh.getBookingid() );
+        for(OccupationHistory occupationHistory : occupationHistoryList) {
+            occupationHistoryRepo.delete( occupationHistory );
+        }
+        List<BookingHistory> bookingHistoryList = bookingHistoryRepo.findByBookingid( bh.getBookingid() );
+        for(BookingHistory bookingHistory : bookingHistoryList) {
+            bookingHistory.setStatus( "canceled" );
+            bookingHistoryRepo.save( bookingHistory );
+        }
+        return "canceled";
+    }
+
     @PutMapping("/manager/scheduleStart/{hotel_id}/{emp_id}/{date}/{time}")
     public ResponseEntity<Schedule> changeStartTime(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id,
                                                     @PathVariable(value = "date") @DateTimeFormat(pattern="yyyy-MM-dd") Date date,

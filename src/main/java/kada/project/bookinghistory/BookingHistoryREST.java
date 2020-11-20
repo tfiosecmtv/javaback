@@ -48,11 +48,11 @@ public class BookingHistoryREST {
         return this.bookingHistoryRepo.findAll();
     }
 
-    //get guests by booking_id
+    //get guests services by booking_id
     @GetMapping("/bookinghistory/{bookingid}")
     public ResponseEntity findByBI(@PathVariable(value = "bookingid") Long bookingid) throws JsonProcessingException {
 
-        BookingHistory objects = bookingHistoryRepo.findByBookingid( bookingid );
+        List<BookingHistory> objects = bookingHistoryRepo.findByBookingid( bookingid );
         List<GuestUsesService> list = guestUsesServicesRepo.findByBookingid( bookingid );
         Booking booking = new Booking( objects,  list);
         return new ResponseEntity(booking.getJson(), HttpStatus.OK );

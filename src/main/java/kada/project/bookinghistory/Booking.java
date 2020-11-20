@@ -6,10 +6,10 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 
 import java.util.*;
 public class Booking {
-    BookingHistory bh;
+    List<BookingHistory> bh;
     List<GuestUsesService> list;
 
-    public Booking(BookingHistory bh, List<GuestUsesService> list) {
+    public Booking(List<BookingHistory> bh, List<GuestUsesService> list) {
         this.bh = bh;
         this.list = list;
     }
