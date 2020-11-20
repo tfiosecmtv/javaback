@@ -16,7 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import kada.project.room.Room;
 import kada.project.room.RoomRepo;
-import java.text.DateFormat;
+//import java.text.DateFormat;
 import java.io.*;
 import javax.mail.*;
 import javax.mail.internet.AddressException;
@@ -30,7 +30,7 @@ import java.sql.Timestamp;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.format.annotation.DateTimeFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.text.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
@@ -441,12 +441,16 @@ public class EmployeeRest {
     @GetMapping("/manager/getscheduleforall/{hotel_id}")
     public ResponseEntity getScheduleForAll(@PathVariable(value = "hotel_id") Long hotel_id) throws JsonProcessingException {
         List<Schedule> schedules = scheduleRepo.findByHotelid(hotel_id);
-        HashMap<Long, ScheduleInfo> empSchMap = new HashMap<Long, ScheduleInfo>();
+        List<ScheduleInfo> empSchMap = new ArrayList<>();
         for( Schedule s : schedules )
         {
+            // new
+            DateFormat dfDate = new SimpleDateFormat("yyyy-mm-dd");
+            DateFormat dfTime = new SimpleDateFormat("HH:mm:ss");
+            //
             Employee emp = employeeRepo.findByHotelidAndEmployeeid(hotel_id,s.getEmployeeid());
-            ScheduleInfo info = new ScheduleInfo(s.getEmployeeid(), emp.getFirst_name(), emp.getLast_name(), emp.getJob_title(), emp.paymentperhour, s.getDate(), s.getStarttime(), s.getEndtime());
-            empSchMap.put(s.getEmployeeid(), info);
+            ScheduleInfo info = new ScheduleInfo(s.getEmployeeid(), emp.getFirst_name(), emp.getLast_name(), emp.getJob_title(), emp.paymentperhour, dfDate.format(s.getDate()), dfTime.format(s.getStarttime()), dfTime.format(s.getEndtime()));
+            empSchMap.add(info);
         }
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         return new ResponseEntity(ow.writeValueAsString(empSchMap), HttpStatus.OK);
@@ -484,41 +488,62 @@ public class EmployeeRest {
     }
 
     @PutMapping("/manager/scheduleStart/{hotel_id}/{emp_id}/{date}/{time}")
-    public ResponseEntity<Schedule> changeStartTime(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id,
-                                                    @PathVariable(value = "date") @DateTimeFormat(pattern="yyyy-MM-dd") Date date,
-                                                    @PathVariable(value = "time") String time) throws ParseException {
-//        DateFormat formatterDate = new SimpleDateFormat("yyyy-MM-dd");
-        DateFormat formatterTime = new SimpleDateFormat("HH:mm:ss");
+    public ResponseEntity<ScheduleInfo> changeStartTime(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id,
+                                                        @PathVariable(value = "date") @DateTimeFormat(pattern="yyyy-MM-dd") Date date,
+                                                        @PathVariable(value = "time") String time) throws ParseException {
 
+        DateFormat dfDate = new SimpleDateFormat("yyyy-mm-dd");
+        DateFormat dfTime = new SimpleDateFormat("HH:mm:ss");
+        Timestamp timeStamp = new Timestamp((dfTime.parse(time)).getTime());
+
+
+        Employee emp = employeeRepo.findByHotelidAndEmployeeid(hotel_id, emp_id);
         Schedule schedule = scheduleRepo.findByHotelidAndEmployeeidAndDate(hotel_id, emp_id, date);
-        Timestamp timeStamp = new Timestamp((formatterTime.parse(time)).getTime());
+
+
+        ScheduleInfo info = new ScheduleInfo(hotel_id, emp.getFirst_name(), emp.getLast_name(), emp.getJob_title(),
+                emp.getPayment_per_hour(), dfDate.format(date), dfTime.format(timeStamp), dfTime.format(schedule.getEndtime()));
+
+
         schedule.setStarttime(timeStamp);
         scheduleRepo.save(schedule);
-        return ResponseEntity.ok().body(schedule);
+        return ResponseEntity.ok().body(info);
     }
+
 
     @PutMapping("/manager/scheduleEnd/{hotel_id}/{emp_id}/{date}/{time}")
-    public ResponseEntity<Schedule> changeEndTime(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id,
-                                                  @PathVariable(value = "date") @DateTimeFormat(pattern="yyyy-MM-dd") Date date,
-                                                  @PathVariable(value = "time") String time) throws ParseException {
-//        DateFormat formatterDate = new SimpleDateFormat("yyyy-MM-dd");
-        DateFormat formatterTime = new SimpleDateFormat("HH:mm:ss");
+    public ResponseEntity<ScheduleInfo> changeEndTime(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id,
+                                                      @PathVariable(value = "date") @DateTimeFormat(pattern="yyyy-MM-dd") Date date,
+                                                      @PathVariable(value = "time") String time) throws ParseException {
 
+        DateFormat dfDate = new SimpleDateFormat("yyyy-MM-dd");
+        DateFormat dfTime = new SimpleDateFormat("HH:mm:ss");
+        Timestamp timeStamp = new Timestamp((dfTime.parse(time)).getTime());
+
+
+        Employee emp = employeeRepo.findByHotelidAndEmployeeid(hotel_id, emp_id);
         Schedule schedule = scheduleRepo.findByHotelidAndEmployeeidAndDate(hotel_id, emp_id, date);
-        Timestamp timeStamp = new Timestamp((formatterTime.parse(time)).getTime());
-        schedule.setEndtime(timeStamp);
+
+        ScheduleInfo info = new ScheduleInfo(hotel_id, emp.getFirst_name(), emp.getLast_name(), emp.getJob_title(),
+                emp.getPayment_per_hour(), dfDate.format(date), dfTime.format(schedule.getStarttime()), dfTime.format(timeStamp));
+
+
+        schedule.setStarttime(timeStamp);
         scheduleRepo.save(schedule);
-        return ResponseEntity.ok().body(schedule);
+        return ResponseEntity.ok().body(info);
     }
 
+
     @PostMapping("/manager/addschedule/{hotel_id}/{emp_id}/{date}/{starttime}/{endtime}")
-    public ResponseEntity<Schedule> addSchedule(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id,
-                                                @PathVariable(value = "date") @DateTimeFormat(pattern="yyyy-MM-dd") Date date,
-                                                @PathVariable(value = "starttime") String starttime,
-                                                @PathVariable(value = "endtime") String endtime) throws ParseException {
-        DateFormat formatterTime = new SimpleDateFormat("HH:mm:ss");
-        Timestamp startStamp = new Timestamp((formatterTime.parse(starttime)).getTime());
-        Timestamp endStamp = new Timestamp((formatterTime.parse(endtime)).getTime());
+    public ResponseEntity<ScheduleInfo> addSchedule(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id,
+                                                    @PathVariable(value = "date") @DateTimeFormat(pattern="yyyy-MM-dd") Date date,
+                                                    @PathVariable(value = "starttime") String starttime,
+                                                    @PathVariable(value = "endtime") String endtime) throws ParseException {
+        DateFormat dfDate = new SimpleDateFormat("yyyy-MM-dd");
+        DateFormat dfTime = new SimpleDateFormat("HH:mm:ss");
+
+        Timestamp startStamp = new Timestamp((dfTime.parse(starttime)).getTime());
+        Timestamp endStamp = new Timestamp((dfTime.parse(endtime)).getTime());
 
         Schedule schedule = new Schedule();
 
@@ -528,7 +553,13 @@ public class EmployeeRest {
         schedule.setStarttime(startStamp);
         schedule.setEndtime(endStamp);
         scheduleRepo.save(schedule);
-        return ResponseEntity.ok().body(schedule);
+
+        Employee emp = employeeRepo.findByHotelidAndEmployeeid(hotel_id, emp_id);
+
+        ScheduleInfo info = new ScheduleInfo(hotel_id, emp.getFirst_name(), emp.getLast_name(), emp.getJob_title(),
+                emp.getPayment_per_hour(), dfDate.format(date), starttime, endtime);
+
+        return ResponseEntity.ok().body(info);
     }
 
 

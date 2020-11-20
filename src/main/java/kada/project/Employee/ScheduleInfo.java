@@ -9,11 +9,11 @@ public class ScheduleInfo {
     public String lastname;
     public String jobtitle;
     public int paymentperhour;
-    public Date date;
-    public Timestamp starttime;
-    public Timestamp endtime;
+    public String date;
+    public String starttime;
+    public String endtime;
 
-    public ScheduleInfo(Long employee_id, String firstname, String lastname, String jobtitle, int paymentperhour, Date date, Timestamp starttime, Timestamp endtime) {
+    public ScheduleInfo(Long employee_id, String firstname, String lastname, String jobtitle, int paymentperhour, String date, String starttime, String endtime) {
         this.employee_id = employee_id;
         this.firstname = firstname;
         this.lastname = lastname;
