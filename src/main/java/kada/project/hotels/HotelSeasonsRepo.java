@@ -9,4 +9,5 @@ import java.util.List;
 public interface HotelSeasonsRepo extends JpaRepository<HotelSeasons, SeasonsId> {
     List<HotelSeasons> findByHotelid(Long hotel_id);
     HotelSeasons findBySeason(String name);
+    HotelSeasons findByHotelidAndSeason(Long hotel_id, String name);
 }

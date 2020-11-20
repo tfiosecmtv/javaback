@@ -338,12 +338,13 @@ public class EmployeeRest {
         return ResponseEntity.ok().body("cannot add!!!!");
     }
 
-    @DeleteMapping("/manager/deleteseason/{name}")
-    public ResponseEntity deleteSeason(@PathVariable("name") String name) {
-        HotelSeasons hotelSeasons = hotelSeasonsRepo.findBySeason( name );
+    @DeleteMapping("/manager/deleteseason/{name}/{hotelid}")
+    public ResponseEntity deleteSeason(@PathVariable("name") String name, @PathVariable("hotelid") Long hotelid) {
+        HotelSeasons hotelSeasons = hotelSeasonsRepo.findByHotelidAndSeason(hotelid, name);
         hotelSeasonsRepo.delete( hotelSeasons );
         return ResponseEntity.ok().body("deleted!");
     }
+
 
     @PostMapping("/manager/emailtoemployees/{hotelid}")
     public void sendemailtoemployees(@PathVariable("hotelid") Long hotelid, @Validated @RequestBody Mail mail) throws AddressException, MessagingException, IOException {
@@ -445,16 +446,20 @@ public class EmployeeRest {
         for( Schedule s : schedules )
         {
             // new
-            DateFormat dfDate = new SimpleDateFormat("yyyy-mm-dd");
+            DateFormat dfDate = new SimpleDateFormat("yyyy-MM-dd");
             DateFormat dfTime = new SimpleDateFormat("HH:mm:ss");
             //
             Employee emp = employeeRepo.findByHotelidAndEmployeeid(hotel_id,s.getEmployeeid());
             ScheduleInfo info = new ScheduleInfo(s.getEmployeeid(), emp.getFirst_name(), emp.getLast_name(), emp.getJob_title(), emp.paymentperhour, dfDate.format(s.getDate()), dfTime.format(s.getStarttime()), dfTime.format(s.getEndtime()));
+
+
+
             empSchMap.add(info);
         }
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         return new ResponseEntity(ow.writeValueAsString(empSchMap), HttpStatus.OK);
     }
+
 
     //    @PutMapping("/manager/changepayroll/{hotel_id}/{emp_id}/{new_pay}")
     @PutMapping("/manager/changepayroll/{hotel_id}/{emp_id}/{new_pay}")
@@ -465,6 +470,7 @@ public class EmployeeRest {
         return ResponseEntity.ok().body(employee);
     }
 
+
     @DeleteMapping("/manager/schedule/{hotel_id}/{emp_id}/{date}")
     public String deleteWorkDay(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id, @PathVariable(value = "date") @DateTimeFormat(pattern="yyyy-MM-dd") Date date)
     {
@@ -472,6 +478,7 @@ public class EmployeeRest {
         scheduleRepo.delete(schedule);
         return "deleted";
     }
+
 
     @DeleteMapping("/deletebooking")
     public String deletebooking(@Validated @RequestBody BookingHistory bh) {
@@ -492,7 +499,7 @@ public class EmployeeRest {
                                                         @PathVariable(value = "date") @DateTimeFormat(pattern="yyyy-MM-dd") Date date,
                                                         @PathVariable(value = "time") String time) throws ParseException {
 
-        DateFormat dfDate = new SimpleDateFormat("yyyy-mm-dd");
+        DateFormat dfDate = new SimpleDateFormat("yyyy-MM-dd");
         DateFormat dfTime = new SimpleDateFormat("HH:mm:ss");
         Timestamp timeStamp = new Timestamp((dfTime.parse(time)).getTime());
 
@@ -510,7 +517,6 @@ public class EmployeeRest {
         return ResponseEntity.ok().body(info);
     }
 
-
     @PutMapping("/manager/scheduleEnd/{hotel_id}/{emp_id}/{date}/{time}")
     public ResponseEntity<ScheduleInfo> changeEndTime(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id,
                                                       @PathVariable(value = "date") @DateTimeFormat(pattern="yyyy-MM-dd") Date date,
@@ -520,7 +526,6 @@ public class EmployeeRest {
         DateFormat dfTime = new SimpleDateFormat("HH:mm:ss");
         Timestamp timeStamp = new Timestamp((dfTime.parse(time)).getTime());
 
-
         Employee emp = employeeRepo.findByHotelidAndEmployeeid(hotel_id, emp_id);
         Schedule schedule = scheduleRepo.findByHotelidAndEmployeeidAndDate(hotel_id, emp_id, date);
 
@@ -528,11 +533,10 @@ public class EmployeeRest {
                 emp.getPayment_per_hour(), dfDate.format(date), dfTime.format(schedule.getStarttime()), dfTime.format(timeStamp));
 
 
-        schedule.setStarttime(timeStamp);
+        schedule.setEndtime(timeStamp);
         scheduleRepo.save(schedule);
         return ResponseEntity.ok().body(info);
     }
-
 
     @PostMapping("/manager/addschedule/{hotel_id}/{emp_id}/{date}/{starttime}/{endtime}")
     public ResponseEntity<ScheduleInfo> addSchedule(@PathVariable(value = "hotel_id") Long hotel_id, @PathVariable(value = "emp_id") Long emp_id,
