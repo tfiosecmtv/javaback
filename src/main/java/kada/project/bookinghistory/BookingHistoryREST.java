@@ -66,6 +66,13 @@ public class BookingHistoryREST {
         return objects;
     }
 
+    @GetMapping("/bookinghistory/occupationhistory")
+    public @ResponseBody List<OccupationHistory> findByGI() {
+
+
+        return occupationHistoryRepo.findAll();
+    }
+
     @PostMapping("/booking/addservice")
     public ResponseEntity addService(@Validated @RequestBody GuestUsesService guestUsesService) {
         System.out.println(guestUsesService.getHotel_id()); //
@@ -145,21 +152,93 @@ public class BookingHistoryREST {
     }
     //update
 
-    @PutMapping("/bookinghistory/{booking_id}")
-    public ResponseEntity<BookingHistory> updatebooking(@PathVariable(value = "booking_id") Long booking_id,
-                                                        @Validated @RequestBody BookingHistory bookingDets)  {
-        System.out.println(booking_id.toString());
-        BookingHistory bookingHistory = bookingHistoryRepo.findById(booking_id)
-                .orElseThrow( );
-        bookingHistory.setStatus( bookingDets.getStatus() );
-        bookingHistory.setRoomtype( bookingDets.getRoomtype() );
-        bookingHistory.setDate_reservation( bookingDets.getDate_reservation() );
-        bookingHistory.setDue_date( bookingDets.getDue_date() );
-        bookingHistory.setNumber_of_rooms( bookingDets.getNumber_of_rooms() );
-        bookingHistory.setGuestid( bookingDets.getGuestid() );
-        bookingHistory.setPrice( bookingDets.getPrice() );
-        final BookingHistory updatedBooking = bookingHistoryRepo.save(bookingHistory);
-        return ResponseEntity.ok(updatedBooking);
+    @PostMapping("/changebooking/{prevroomtype}")
+    public ResponseEntity changeBooking(@Validated @RequestBody BookingHistory bookingHistory, @PathVariable("prevroomtype") String prevroomtype) {
+//        String prevroomtype = bookingHistoryRepo.findByBookingid( bookingHistory.getBookingid() ).getRoomtype();
+
+        List<Integer> integerList = filter( bookingHistory );
+        if(integerList.size() < bookingHistory.getNumber_of_rooms())
+            return ResponseEntity.ok().body("no available rooms");
+        bookingHistory.setPrice( 0 );
+        Date start = bookingHistory.getDate_reservation();
+        Date end = bookingHistory.getDue_date();
+        Calendar cStart = Calendar.getInstance();
+        Calendar cEnd = Calendar.getInstance();
+        bookingHistory.setPrice( bookingHistory.getNumber_of_rooms()*price( bookingHistory.getDate_reservation(), bookingHistory.getDue_date(), bookingHistory.getRoomtype(), bookingHistory.getHotelid() ) );
+        bookingHistoryRepo.save(bookingHistory);
+
+        if(prevroomtype.equals( "none" ))
+            return ResponseEntity.ok().body(bookingHistory);
+
+//        List<GuestUsesService> guestUsesService = guestUsesServiceRepo.findByBookingid( bookingHistory.getBookingid() );
+//        for (GuestUsesService guestUsesService1 : guestUsesService) {
+//            guestUsesServiceRepo.delete( guestUsesService1 );
+//            guestUsesService1.setRoom_type( bookingHistory.getRoomtype() );
+//            guestUsesServiceRepo.save( guestUsesService1 );
+//        } //works
+
+        List<OccupationHistory> occupationHistory = occupationHistoryRepo.findByBookingidAndRoomtype( bookingHistory.getBookingid(), prevroomtype );
+        cStart.setTime( start );
+        cStart.add( Calendar.DAY_OF_MONTH,-1 );
+        for (OccupationHistory oh : occupationHistory) {
+            oh.setTo_date( cStart.getTime() );
+            occupationHistoryRepo.save( oh );
+        }
+
+        for(Integer i : integerList) {
+            OccupationHistory oh = new OccupationHistory();
+            oh.setHotel_id( bookingHistory.getHotelid() );
+            oh.setRoomnumber( i );
+            oh.setGuest_id( bookingHistory.getGuestid() );
+            oh.setRoom_type( bookingHistory.getRoomtype() );
+            oh.setBookingid( bookingHistory.getBookingid() );
+            oh.setFrom_date( bookingHistory.date_reservation );
+            oh.setTo_date( bookingHistory.due_date );
+            occupationHistoryRepo.save( oh );
+        }
+
+        // creating new occupationhistory
+        // frontend stores available room numbers and booking history record
+        // through loop
+
+        return ResponseEntity.ok().body(bookingHistory);
+    }
+
+    @PostMapping("/filterbyroomtype")
+    public List<Integer> filter(@Validated @RequestBody BookingHistory bookingHistory) {
+        List<Integer> resultList = new ArrayList<>();
+        List<Room> roomList = roomRepo.findByHotelidAndRoomtype( bookingHistory.getHotelid(), bookingHistory.getRoomtype() );
+        for(Room room : roomList) {
+            List<OccupationHistory> occupationHistoryList = occupationHistoryRepo.findByHotelidAndRoomnumber( room.getHotelid(), room.getRoomnumber() );
+            Filter filter = new Filter();
+            List<DateInterval> dateIntervals = new ArrayList<DateInterval>();
+            for(OccupationHistory occupationHistory : occupationHistoryList) {
+                dateIntervals.add( new DateInterval( occupationHistory.getFrom_date(), occupationHistory.getTo_date() ) );
+            }
+            dateIntervals.add( new DateInterval( bookingHistory.getDate_reservation(), bookingHistory.getDue_date() ) );
+            String res = filter.findOverlap( dateIntervals );
+            if(res.equals( "It’s a clean list" ) == true)
+                resultList.add( room.getRoomnumber() );
+        }
+        return resultList;
+    }
+
+    @PutMapping("/cancelbooking/{bh_id}/{room_type}/{number_of_rooms}") //works
+    public ResponseEntity<BookingHistory> changeStatus(@PathVariable(value = "bh_id") Long bh_id, @PathVariable(value = "number_of_rooms") Integer number_of_rooms, @PathVariable(value = "room_type") String room_type) {
+        BookingHistory bookingHistory = bookingHistoryRepo.findByBookingidAndRoomtype( bh_id, room_type );
+        System.out.println(bookingHistory.getGuestid());
+        bookingHistory.setNumber_of_rooms( bookingHistory.getNumber_of_rooms()-number_of_rooms );
+
+        bookingHistory.setPrice( bookingHistory.getNumber_of_rooms()*price( bookingHistory.getDate_reservation(), bookingHistory.getDue_date(), bookingHistory.getRoomtype(), bookingHistory.getHotelid() ) );
+        bookingHistoryRepo.save(bookingHistory);
+
+        List<OccupationHistory> occupationHistoryList = occupationHistoryRepo.findByBookingidAndRoomtype( bh_id, room_type );
+        for(int i = 0; i < number_of_rooms; i++) {
+            occupationHistoryRepo.delete( occupationHistoryList.get( 0 ) );
+            occupationHistoryList.remove( 0 );
+        }
+
+        return ResponseEntity.ok().body(bookingHistory);
     }
 
     //delete
