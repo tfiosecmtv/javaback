@@ -244,6 +244,19 @@ public class EmployeeRest {
             occupationHistoryRepo.save( oh );
         }
 
+        List<Integer> listint = filter(bookingHistory);
+
+        for(Integer i : listint) {
+            OccupationHistory oh = new OccupationHistory();
+            oh.setHotel_id( bookingHistory.getHotelid() );
+            oh.setRoomnumber( i );
+            oh.setGuest_id( bookingHistory.getGuestid() );
+            oh.setRoom_type( bookingHistory.getRoomtype() );
+            oh.setBookingid( bookingHistory.getBookingid() );
+            oh.setFrom_date( bookingHistory.getDate_reservation() );
+            oh.setTo_date( bookingHistory.getDue_date() );
+            occupationHistoryRepo.save( oh );
+        }
 
         // creating new occupationhistory
         // frontend stores available room numbers and booking history record
