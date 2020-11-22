@@ -84,6 +84,7 @@ public class BookingHistory {
     Integer serviceprice;
     @Column(name = "category")
     String category;
+    public String prevroomtype;
     public String getCategory() {
         return category;
     }

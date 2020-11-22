@@ -210,8 +210,8 @@ public class EmployeeRest {
         return occupationHistoryRepo.findByHotelidAndBookingid(hotelid, bookingid);
     }
 
-    @PostMapping("/deskclerk/changebooking/{prevroomtype}")
-    public ResponseEntity<BookingHistory> changeBooking(@Validated @RequestBody BookingHistory bookingHistory, @PathVariable("prevroomtype") String prevroomtype) {
+    @PostMapping("/deskclerk/changebooking")
+    public ResponseEntity<BookingHistory> changeBooking(@Validated @RequestBody BookingHistory bookingHistory) {
 //        String prevroomtype = bookingHistoryRepo.findByBookingid( bookingHistory.getBookingid() ).getRoomtype();
 
         bookingHistory.setPrice( 0 );
@@ -219,12 +219,12 @@ public class EmployeeRest {
         Date end = bookingHistory.getDue_date();
         Calendar cStart = Calendar.getInstance();
         Calendar cEnd = Calendar.getInstance();
-        BookingHistory bh = bookingHistoryRepo.findByBookingidAndRoomtype( bookingHistory.getBookingid(), prevroomtype );
+        BookingHistory bh = bookingHistoryRepo.findByBookingidAndRoomtype( bookingHistory.getBookingid(), bookingHistory.prevroomtype );
 
         bookingHistory.setPrice( bookingHistory.getNumber_of_rooms()*price( bookingHistory.getDate_reservation(), bookingHistory.getDue_date(), bookingHistory.getRoomtype(), bookingHistory.getHotelid() ) );
         bookingHistoryRepo.save(bookingHistory);
 
-        if(prevroomtype.equals( "none" ))
+        if(bookingHistory.prevroomtype.equals( "none" ))
             return ResponseEntity.ok().body(bookingHistory);
 
 //        List<GuestUsesService> guestUsesService = guestUsesServiceRepo.findByBookingid( bookingHistory.getBookingid() );
@@ -234,7 +234,7 @@ public class EmployeeRest {
 //            guestUsesServiceRepo.save( guestUsesService1 );
 //        } //works
 
-        List<OccupationHistory> occupationHistory = occupationHistoryRepo.findByBookingidAndRoomtype( bookingHistory.getBookingid(), prevroomtype );
+        List<OccupationHistory> occupationHistory = occupationHistoryRepo.findByBookingidAndRoomtype( bookingHistory.getBookingid(), bookingHistory.prevroomtype );
         cStart.setTime( start );
         cStart.add( Calendar.DAY_OF_MONTH,-1 );
         bh.setDue_date( cStart.getTime() );
