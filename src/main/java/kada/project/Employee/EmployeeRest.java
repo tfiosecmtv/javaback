@@ -219,6 +219,8 @@ public class EmployeeRest {
         Date end = bookingHistory.getDue_date();
         Calendar cStart = Calendar.getInstance();
         Calendar cEnd = Calendar.getInstance();
+        BookingHistory bh = bookingHistoryRepo.findByBookingidAndRoomtype( bookingHistory.getBookingid(), prevroomtype );
+
         bookingHistory.setPrice( bookingHistory.getNumber_of_rooms()*price( bookingHistory.getDate_reservation(), bookingHistory.getDue_date(), bookingHistory.getRoomtype(), bookingHistory.getHotelid() ) );
         bookingHistoryRepo.save(bookingHistory);
 
@@ -235,6 +237,8 @@ public class EmployeeRest {
         List<OccupationHistory> occupationHistory = occupationHistoryRepo.findByBookingidAndRoomtype( bookingHistory.getBookingid(), prevroomtype );
         cStart.setTime( start );
         cStart.add( Calendar.DAY_OF_MONTH,-1 );
+        bh.setDue_date( cStart.getTime() );
+        bookingHistoryRepo.save( bh );
         for (OccupationHistory oh : occupationHistory) {
             oh.setTo_date( cStart.getTime() );
             occupationHistoryRepo.save( oh );
