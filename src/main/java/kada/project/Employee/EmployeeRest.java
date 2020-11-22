@@ -246,7 +246,10 @@ public class EmployeeRest {
 
         List<Integer> listint = filter(bookingHistory);
 
-        for(Integer i : listint) {
+        int num = 0;
+        for(Integer i : listint ) {
+            if(num == bookingHistory.getNumber_of_rooms())
+                break;
             OccupationHistory oh = new OccupationHistory();
             oh.setHotel_id( bookingHistory.getHotelid() );
             oh.setRoomnumber( i );
@@ -256,6 +259,7 @@ public class EmployeeRest {
             oh.setFrom_date( bookingHistory.getDate_reservation() );
             oh.setTo_date( bookingHistory.getDue_date() );
             occupationHistoryRepo.save( oh );
+            num++;
         }
 
         // creating new occupationhistory
