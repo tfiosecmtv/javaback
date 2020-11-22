@@ -190,6 +190,9 @@ public class BookingHistoryREST {
             occupationHistoryRepo.delete( oh );
         }
 
+        BookingHistory bh = bookingHistoryRepo.findByBookingidAndRoomtype( bookingHistory.getBookingid(), prevroomtype );
+        bookingHistoryRepo.delete( bh );
+
         for(Integer i : integerList) {
             OccupationHistory oh = new OccupationHistory();
             oh.setHotel_id( bookingHistory.getHotelid() );
