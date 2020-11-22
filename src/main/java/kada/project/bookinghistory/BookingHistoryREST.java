@@ -164,7 +164,7 @@ public class BookingHistoryREST {
 
         List<Integer> integerList = filter( bookingHistory );
         if(integerList.size() < bookingHistory.getNumber_of_rooms())
-            return ResponseEntity.ok().body("no available rooms");
+            return new ResponseEntity(HttpStatus.NOT_FOUND);
         bookingHistory.setPrice( 0 );
         Date start = bookingHistory.getDate_reservation();
         Date end = bookingHistory.getDue_date();
