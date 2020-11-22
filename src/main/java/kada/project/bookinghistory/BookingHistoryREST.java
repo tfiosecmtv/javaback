@@ -73,6 +73,11 @@ public class BookingHistoryREST {
         return occupationHistoryRepo.findAll();
     }
 
+    @GetMapping("/findRoomTypes/{hotel_id}")
+    public List<RoomType> findRoomTypes(@PathVariable(value = "hotel_id") Long hotel_id) {
+        return roomTypeRepo.findByHotelid(hotel_id);
+    }
+
     @PostMapping("/booking/addservice")
     public ResponseEntity addService(@Validated @RequestBody GuestUsesService guestUsesService) {
         System.out.println(guestUsesService.getHotel_id()); //
@@ -147,6 +152,7 @@ public class BookingHistoryREST {
         bookingHistory.setPrice(bookingHistory.number_of_rooms*price( bookingHistory.date_reservation, bookingHistory.due_date, bookingHistory.roomtype, bookingHistory.hotelid ) );
         List<BookingHistory> bookingHistoryList = bookingHistoryRepo.findAll();
         bookingHistory.setBookingid( Long.valueOf( bookingHistoryList.size()+1 ) );
+        bookingHistory.setStatus( "Pending" );
         bookingHistoryRepo.save(bookingHistory);
         return bookingHistoryRepo.save(bookingHistory);
     }

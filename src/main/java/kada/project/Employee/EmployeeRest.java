@@ -130,7 +130,7 @@ public class EmployeeRest {
     @PutMapping("/deskclerk/changestatusbh/{bh_id}/{roomtype}/{status}") //works
     public ResponseEntity<BookingHistory> changeStatus(@PathVariable(value = "bh_id") Long bh_id, @PathVariable(value = "status") String status, @PathVariable(value = "roomtype") String roomtype) {
         BookingHistory bookingHistory = bookingHistoryRepo.findByBookingidAndRoomtype( bh_id, roomtype );
-        if(status.equals( "Paid" )) {
+        if(status.equals( "Paid" ) && bookingHistory.getCategory().equals( "null" ) == false) {
             Long guestid = bookingHistory.getGuestid();
             Guest guest = userRepo.findByUserId( guestid );
             int price = bookingHistory.getPrice() + bookingHistory.getService_price();
