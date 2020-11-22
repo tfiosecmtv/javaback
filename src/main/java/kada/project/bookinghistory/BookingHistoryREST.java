@@ -181,8 +181,7 @@ public class BookingHistoryREST {
         cStart.setTime( start );
         cStart.add( Calendar.DAY_OF_MONTH,-1 );
         for (OccupationHistory oh : occupationHistory) {
-            oh.setTo_date( cStart.getTime() );
-            occupationHistoryRepo.save( oh );
+            occupationHistoryRepo.delete( oh );
         }
 
         for(Integer i : integerList) {
