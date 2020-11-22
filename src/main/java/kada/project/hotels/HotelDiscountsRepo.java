@@ -8,4 +8,7 @@ import java.util.List;
 @Repository
 public interface HotelDiscountsRepo extends JpaRepository<HotelDiscounts, CategoryId> {
     HotelDiscounts findByHotelidAndCategory(Long hotelid, String category);
+    List<HotelDiscounts> findByHotelid(Long hotelid);
+
+
 }

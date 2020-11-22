@@ -27,6 +27,8 @@ public class HotelRest {
     @Autowired
     private  HotelEntityRepo hotelEntityRepo;
     @Autowired
+    private HotelDiscountsRepo hotelDiscountsRepo;
+    @Autowired
     private  HotelFeaturesRepo hotelFeaturesRepo;
     @Autowired
     private  HotelPhoneRepo hotelPhoneRepo;
@@ -105,6 +107,12 @@ public class HotelRest {
              start = new Date(start.getTime() + (1000 * 60 * 60 * 24));
         }
         return price;
+    }
+
+    @GetMapping("/getHotelDiscounts/{hotel_id}")
+    public List<HotelDiscounts> getHotelDiscounts(@PathVariable(value = "hotel_id") Long hotel_id)
+    {
+        return hotelDiscountsRepo.findByHotelid(hotel_id);
     }
 
     @PostMapping("/hotels/filter")
