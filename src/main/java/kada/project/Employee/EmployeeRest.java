@@ -74,6 +74,18 @@ public class EmployeeRest {
         return employeeRepo.findAll();
     }
 
+    @GetMapping("/deskclerk/findHotelGuests/{hotel_id}")
+    public List<Guest> getHotelGuests(@PathVariable(value = "hotel_id") Long hotel_id) {
+        List<Guest> guestList = userRepo.findAll();
+        List<Guest> hotelGuestList = new ArrayList<>();
+
+        for (Guest guest : guestList) {
+            if (!bookingHistoryRepo.findByHotelidAndGuestid(hotel_id, guest.getUserId()).isEmpty())
+                hotelGuestList.add(guest);
+        }
+        return hotelGuestList;
+    }
+
     @PutMapping("/deskclerk/findguest") //works
     public List<BookingHistory> getguestsbooking(@Validated @RequestBody Guest guest) {
         List<BookingHistory> bookingHistoryList = new ArrayList<BookingHistory>();
