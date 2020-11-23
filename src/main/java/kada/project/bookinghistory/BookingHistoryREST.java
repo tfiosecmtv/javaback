@@ -152,7 +152,7 @@ public class BookingHistoryREST {
         bookingHistory.setPrice(bookingHistory.number_of_rooms*price( bookingHistory.date_reservation, bookingHistory.due_date, bookingHistory.roomtype, bookingHistory.hotelid ) );
         List<BookingHistory> bookingHistoryList = bookingHistoryRepo.findAll();
 
-        bookingHistory.setBookingid( bookingHistory.getHotelid()+bookingHistory.getGuestid()+ new Random().nextLong());
+        bookingHistory.setBookingid( bookingHistory.getHotelid()+bookingHistory.getGuestid() + bookingHistoryList.size());
         bookingHistory.setStatus( "Pending" );
         bookingHistoryRepo.save(bookingHistory);
         return bookingHistoryRepo.save(bookingHistory);
