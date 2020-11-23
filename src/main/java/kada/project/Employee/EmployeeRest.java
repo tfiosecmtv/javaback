@@ -74,6 +74,16 @@ public class EmployeeRest {
         return employeeRepo.findAll();
     }
 
+    @GetMapping("/deskclerk/findbookingsbybandgid")
+    public List<BookingHistory> getBookingsList(@Validated @RequestBody BookingHistory bh) {
+        return bookingHistoryRepo.findByHotelidAndGuestid( bh.getHotelid(), bh.getGuestid() );
+    }
+
+    @GetMapping("/deskclerk/findbookingsbyhotel")
+    public List<BookingHistory> getBookingsListByBookingId(@Validated @RequestBody BookingHistory bh) {
+        return bookingHistoryRepo.findByHotelid( bh.getHotelid());
+    }
+
     @GetMapping("/deskclerk/findHotelGuests/{hotel_id}")
     public List<Guest> getHotelGuests(@PathVariable(value = "hotel_id") Long hotel_id) {
         List<Guest> guestList = userRepo.findAll();
