@@ -220,6 +220,15 @@ public class EmployeeRest {
         return occupationHistoryRepo.findByHotelidAndBookingid(hotelid, bookingid);
     }
 
+    @GetMapping("/deskclerk/getoccupation/{bookingid}/{roomtype}")
+    public List<Integer> getoh(@PathVariable("bookingid") Long bookingid, @PathVariable("roomtype") String roomtype) {
+        List<Integer> intlist = new ArrayList<>();
+        List<OccupationHistory> occupationHistoryList = occupationHistoryRepo.findByBookingidAndRoomtype( bookingid, roomtype );
+        for(OccupationHistory occupationHistory : occupationHistoryList)
+            intlist.add( occupationHistory.getRoomnumber() );
+        return intlist;
+    }
+
     @PostMapping("/deskclerk/changebooking")
     public ResponseEntity<BookingHistory> changeBooking(@Validated @RequestBody BookingHistory bookingHistory) {
 //        String prevroomtype = bookingHistoryRepo.findByBookingid( bookingHistory.getBookingid() ).getRoomtype();
